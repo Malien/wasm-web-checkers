@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>SWI-Prolog WebAssembly demo</title>
+        <style>
+            body {
+                font-family: sans-serif;
+            }
+            .app {
+                display: flex;
+            }
+            .console,
+            .editor {
+                flex: 1;
+                box-sizing: border-box;
+                padding: 10px;
+            }
+            .console {
+                max-width: 600px;
+            }
+            .output-error {
+                color: #900;
+            }
+            input,
+            textarea {
+                box-sizing: border-box;
+                width: 100%;
+            }
+            .loader {
+                animation: blinker 1s linear infinite;
+                font-size: 70px;
+                display: none;
+            }
+            @keyframes blinker {
+                50% {
+                    opacity: 0;
+                }
+            }
+            .loading > .loader {
+                display: block;
+            }
+            .loading > .app {
+                display: none;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="loading" id="top">
+            <div class="loader">LOADING ...</div>
+            <div class="app">
+                <div class="console">
+                    <pre class="output" id="output"></pre>
+                    <form class="input" id="input">
+                        <input type="text" name="query" />
+                    </form>
+                </div>
+                <div class="editor">
+                    <form id="editor">
+                        <textarea name="file" rows="50">
+:- use_module(library(lists)).
+
+%%    queens(+N, -Queens) is nondet.
+%
+%	@param	Queens is a list of column numbers for placing the queens.
+%	@author Richard A. O'Keefe (The Craft of Prolog)
+
+queens(N, Queens) :-
+    length(Queens, N),
+    board(Queens, Board, 0, N, _, _),
+    queens(Board, 0, Queens).
+
+board([], [], N, N, _, _).
+board([_|Queens], [Col-Vars|Board], Col0, N, [_|VR], VC) :-
+    Col is Col0+1,
+    functor(Vars, f, N),
+    constraints(N, Vars, VR, VC),
+    board(Queens, Board, Col, N, VR, [_|VC]).
+
+constraints(0, _, _, _) :- !.
+constraints(N, Row, [R|Rs], [C|Cs]) :-
+    arg(N, Row, R-C),
+    M is N-1,
+    constraints(M, Row, Rs, Cs).
+
+queens([], _, []).
+queens([C|Cs], Row0, [Col|Solution]) :-
+    Row is Row0+1,
+    select(Col-Vars, [C|Cs], Board),
+    arg(Row, Vars, Row-Row),
+    queens(Board, Row, Solution).
+
+is3(foo).
+                        </textarea>
+                        <button type="submit">(Re)consult</button>
+                    </form>
+                </div>
+            </div>
+            <p>
+                <a href="https://github.com/SWI-Prolog/roadmap/issues/43" target="_blank"
+                    >More info</a
+                >
+            </p>
+        </div>
+        <script src="/bundle.js"></script>
+        <script src="/swipl-wasm/swipl-web.js"></script>
+    </body>
+</html>

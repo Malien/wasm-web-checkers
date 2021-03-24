@@ -1,0 +1,3 @@
+[submodule "swipl-wasm"]
+	path = swipl-wasm
+	url = https://github.com/SWI-Prolog/swipl-wasm.git
