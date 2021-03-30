@@ -1,75 +1,47 @@
 import { initPL, Prolog, TermType, TermPtr } from "./swipl"
-import { loadProgramFile, callPredicate, getTermChars, getNameArity } from "./util"
-import { assertTermType } from "./typecheck"
+import util from "./util"
+import typecheck from "./typecheck"
 
 type Cell = "1" | "0" | "b" | "w" | "bq" | "wq"
 type BoardRow = [Cell, Cell, Cell, Cell, Cell, Cell, Cell]
 type GameBoard = [BoardRow, BoardRow, BoardRow, BoardRow, BoardRow, BoardRow, BoardRow, BoardRow]
-
 ;(async () => {
     const PL = await initPL()
 
+    const { getTermChars, constructArgsArray, callPredicate, loadProgramFile } = util.bind(PL)
+    const { assertCompoundTermShape, assertTermType } = typecheck.bind(PL)
+
     const predicates = {
-        boardInitializeGame: PL.predicate("board_initialize_game", 1, "user")
+        boardInitializeGame: PL.predicate("board_initialize_game", 1, "user"),
     }
 
-    const retrieveCell = (PL: Prolog, cellTerm: TermPtr): Cell => {
-        assertTermType(PL, cellTerm).toBeOneOf(TermType.ATOM, TermType.INTEGER)
+    const retrieveCell = (cellTerm: TermPtr): Cell => {
+        assertTermType(cellTerm).toBeOneOf(TermType.ATOM, TermType.INTEGER)
 
-        return getTermChars(PL, cellTerm, PL.CVT_ATOM | PL.CVT_INTEGER) as Cell
+        return getTermChars(cellTerm, PL.CVT_ATOM | PL.CVT_INTEGER) as Cell
     }
 
-    const retrieveRow = (PL: Prolog, rowTerm: TermPtr): BoardRow => {
-        assertTermType(PL, rowTerm).toBe(TermType.TERM)
+    const retrieveRow = (rowTerm: TermPtr): BoardRow => {
+        assertCompoundTermShape(rowTerm, "l", 8)
 
-        const [name, arity] = getNameArity(PL, rowTerm)
-        if (name !== "l" && arity != 8) {
-            throw new Error("Expected board term to be `l/8`")
-        }
-
-        const row: Cell[] = []
-        const cellTerm = PL.newTermRef()
-        for (let i = 1; i < 9; ++i) {
-            if (!PL.getArg(i, rowTerm, cellTerm)) {
-                throw new Error(`Cannot retrieve cell at index ${i}`)
-            }
-            const cell = retrieveCell(PL, cellTerm)
-            row.push(cell)
-        }
-
-        return row as BoardRow
+        return constructArgsArray(rowTerm, retrieveCell, 8) as BoardRow
     }
 
-    const retrieveBoard = (PL: Prolog, boardTerm: TermPtr): GameBoard => {
-        assertTermType(PL, boardTerm).toBe(TermType.TERM)
+    const retrieveBoard = (boardTerm: TermPtr): GameBoard => {
+        assertCompoundTermShape(boardTerm, "game_board", 8)
 
-        const [name, arity] = getNameArity(PL, boardTerm)
-        if (name !== "game_board" && arity != 8) {
-            throw new Error("Expected board term to be `game_board/8`")
-        }
-
-        const gameBoard: BoardRow[] = []
-        const rowTerm = PL.newTermRef()
-        for (let i = 1; i < 9; ++i) {
-            if (!PL.getArg(i, boardTerm, rowTerm)) {
-                throw new Error(`Cannot retrieve row at index ${i}`)
-            }
-            const row = retrieveRow(PL, rowTerm)
-            gameBoard.push(row)
-        }
-
-        return gameBoard as GameBoard
+        return constructArgsArray(boardTerm, retrieveRow) as GameBoard
     }
 
-    const initialBoard = (PL: Prolog): TermPtr => {
+    const initialBoard = (): TermPtr => {
         const term = PL.newTermRef()
-        callPredicate(PL, predicates.boardInitializeGame, term)
+        callPredicate(predicates.boardInitializeGame, term)
         return term
     }
 
-    await loadProgramFile(PL, await fetch("./main.pl"))
+    await loadProgramFile(await fetch("./main.pl"))
 
-    const boardTerm = initialBoard(PL)
-    const gameBoard = retrieveBoard(PL, boardTerm)
+    const boardTerm = initialBoard()
+    const gameBoard = retrieveBoard(boardTerm)
     console.log(gameBoard)
 })()

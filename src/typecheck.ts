@@ -1,4 +1,5 @@
 import { Prolog, TermPtr, TermType } from "./swipl"
+import { bindPrologFunctions, getNameArity, NameAndArity } from "./util"
 
 export class TermTypeError extends Error {
     constructor(public expected: TermType | TermType[], public got: TermType) {
@@ -16,7 +17,7 @@ export class TermTypeError extends Error {
 }
 
 class TermTypeAssertion {
-    constructor(private PL: Prolog, private term: TermPtr) { }
+    constructor(private PL: Prolog, private term: TermPtr) {}
 
     private type = this.PL.termType(this.term)
 
@@ -34,3 +35,24 @@ class TermTypeAssertion {
 }
 
 export const assertTermType = (PL: Prolog, term: TermPtr) => new TermTypeAssertion(PL, term)
+
+export function assertCompoundTermShape(
+    PL: Prolog,
+    term: TermPtr,
+    name: string,
+    arity: number
+): NameAndArity {
+    assertTermType(PL, term).toBe(TermType.TERM)
+
+    const [actualName, actualArity] = getNameArity(PL, term)
+
+    if (name !== actualName && arity != actualArity) {
+        throw new Error(`Expected board term to be "${name}/${arity}"`)
+    }
+
+    return [name, arity]
+}
+
+export const bind = bindPrologFunctions({ assertTermType, assertCompoundTermShape })
+
+export default { bind }

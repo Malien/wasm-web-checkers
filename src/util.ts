@@ -57,7 +57,9 @@ export const getTermChars = (
 export const advancePtr = <P extends NewType<Ptr, any>>(ptr: P, by: number): P =>
     wrap(unwrap(ptr) + 4 * by)
 
-export const getNameArity = (PL: Prolog, term: TermPtr): [name: string, arity: number] =>
+export type NameAndArity = [name: string, arity: number]
+
+export const getNameArity = (PL: Prolog, term: TermPtr): NameAndArity =>
     withStack(() => {
         const atomPtr = stackAlloc(4)
         const arityPtr = stackAlloc(4)
@@ -76,3 +78,55 @@ export const withStack = <R>(block: () => R): R => {
     stackRestore(stackPtr)
     return returnValue
 }
+
+/**
+ * @note Term should be of type TERM or FUNCTOR
+ */
+export const constructArgsArray = <R>(
+    PL: Prolog,
+    term: TermPtr,
+    transform: (arg: TermPtr) => R,
+    arity?: number
+): R[] => {
+    if (arity === undefined) {
+        ;[, arity] = getNameArity(PL, term)
+    }
+
+    const arr: R[] = []
+    const arg = PL.newTermRef()
+    for (let i = 1; i <= arity; ++i) {
+        if (!PL.getArg(i, term, arg)) {
+            throw new Error(`Cannot retrieve argument to a compound term at index ${i}`)
+        }
+        arr.push(transform(arg))
+    }
+
+    return arr
+}
+
+type Tail<T extends any[]> = T extends [head: any, ...tail: infer Tail_] ? Tail_ : never
+
+type AnyPrologFunctionMap = Record<string, (PL: Prolog, ...args: any[]) => any>
+
+type Bound<T extends AnyPrologFunctionMap> = {
+    [K in keyof T]: (...args: Tail<Parameters<T[K]>>) => ReturnType<T[K]>
+}
+
+export const bindPrologFunctions = <T extends AnyPrologFunctionMap>(funcs: T) => (
+    PL: Prolog
+): Bound<T> =>
+    Object.fromEntries(
+        Object.entries<any>(funcs).map(([name, f]) => [name, f.bind(this, PL)])
+    ) as any
+
+export const bind = bindPrologFunctions({
+    call,
+    callPredicate,
+    loadProgramFile,
+    getAtomTermName,
+    getTermChars,
+    getNameArity,
+    constructArgsArray,
+})
+
+export default { bind }
