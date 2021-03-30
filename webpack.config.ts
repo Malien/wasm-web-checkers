@@ -4,6 +4,7 @@ import CopyPlugin from "copy-webpack-plugin";
 
 module.exports = {
     entry: "./src/main.ts",
+    devtool: "inline-source-map",
     resolve: {
         extensions: [".ts", ".tsx", ".js", ".jsx"],
     },
