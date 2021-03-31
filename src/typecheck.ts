@@ -1,4 +1,4 @@
-import { Prolog, TermPtr, TermType } from "./swipl"
+import { Prolog, TermRef, TermType } from "./swipl"
 import { bindPrologFunctions, getNameArity, NameAndArity } from "./util"
 
 export class TermTypeError extends Error {
@@ -17,7 +17,7 @@ export class TermTypeError extends Error {
 }
 
 class TermTypeAssertion {
-    constructor(private PL: Prolog, private term: TermPtr) {}
+    constructor(private PL: Prolog, private term: TermRef) {}
 
     private type = this.PL.termType(this.term)
 
@@ -32,13 +32,17 @@ class TermTypeAssertion {
             throw new TermTypeError(types, this.type)
         }
     }
+
+    toBeList() {
+        this.toBeOneOf(TermType.LIST, TermType.LIST_PAIR, TermType.NIL)
+    }
 }
 
-export const assertTermType = (PL: Prolog, term: TermPtr) => new TermTypeAssertion(PL, term)
+export const assertTermType = (PL: Prolog, term: TermRef) => new TermTypeAssertion(PL, term)
 
 export function assertCompoundTermShape(
     PL: Prolog,
-    term: TermPtr,
+    term: TermRef,
     name: string,
     arity: number
 ): NameAndArity {

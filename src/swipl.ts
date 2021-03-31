@@ -91,7 +91,7 @@ const plHeaderConstants = {
 export type PLHeaderConstants = typeof plHeaderConstants
 
 export type Ptr = number
-export type TermPtr = NewType<Ptr, { readonly TERM: unique symbol }>
+export type TermRef = NewType<Ptr, { readonly TERM: unique symbol }>
 export type ModulePtr = NewType<Ptr, { readonly MODULE: unique symbol }>
 export type PredicatePtr = NewType<Ptr, { readonly PREDICATE: unique symbol }>
 export type AtomPtr = NewType<Ptr, { readonly ATOM: unique symbol }>
@@ -101,41 +101,47 @@ export type OperationResult = 0 | 1
 
 export interface Bindings {
     initialise(argc: number, argv: Ptr): OperationResult
-    newTermRef(): TermPtr
-    charsToTerm(value: string, term: TermPtr): OperationResult
-    call(term: TermPtr, module: ModulePtr): OperationResult
+    newTermRef(): TermRef
+    charsToTerm(value: string, term: TermRef): OperationResult
+    call(term: TermRef, module: ModulePtr): OperationResult
     predicate(name: string, arity: number, module: string): PredicatePtr
     pred(nameAndArity: string, module: ModulePtr): PredicatePtr
-    newTermRefs(amount: number): TermPtr
-    putAtomChars(term: TermPtr, value: string): OperationResult
+    newTermRefs(amount: number): TermRef
+    putAtomChars(term: TermRef, value: string): OperationResult
     callPredicate(
         module: ModulePtr,
         flags: number,
         predicate: PredicatePtr,
-        terms: TermPtr
+        terms: TermRef
     ): OperationResult
-    openQuery(module: ModulePtr, flags: number, predicate: PredicatePtr, term: TermPtr): QueryID
+    openQuery(module: ModulePtr, flags: number, predicate: PredicatePtr, term: TermRef): QueryID
     nextSolution(query: QueryID): OperationResult
     cutQuery(query: QueryID): OperationResult
     closeQuery(query: QueryID): OperationResult
     currentQuery(): QueryID
-    termType(term: TermPtr): TermType
+    termType(term: TermRef): TermType
     newAtom(value: string): AtomPtr
     atomChars(atom: AtomPtr): string
     newFunctor(atom: AtomPtr, arity: number): FunctorPtr
     functorName(functor: FunctorPtr): AtomPtr
     functorArity(functor: FunctorPtr): number
-    getAtom(term: TermPtr, pointerToAtomToBeWrittenTo: number): OperationResult
-    getAtomChars(term: TermPtr, pointerToCharPointerToBeWrittenTo: number): OperationResult
+    getAtom(term: TermRef, pointerToAtomToBeWrittenTo: Ptr): OperationResult
+    getAtomChars(term: TermRef, pointerToCharPointerToBeWrittenTo: Ptr): OperationResult
     // getStringChars(
     //     term: TermPtr,
     //     pointerToCharPointerToBeWrittenTo: number,
     //     pointerToSizeToBeWrittenTo: number
     // ): OperationResult
-    getChars(term: TermPtr, pointerToCharPointerToBeWrittenTo: number, flags: CharBufferFlags): OperationResult
-    getNameArity(term: TermPtr, pointerToAtomPtrToBeWrittenTo: number, pointerToArityToBeWrittenTo: number): OperationResult
-    getCompoundNameArity(term: TermPtr, pointerToAtomPtrToBeWrittenTo: number, pointerToArityToBeWrittenTo: number): OperationResult
-    getArg(index: number, term: TermPtr, output: TermPtr): OperationResult
+    getChars(term: TermRef, pointerToCharPointerToBeWrittenTo: Ptr, flags: CharBufferFlags): OperationResult
+    getNameArity(term: TermRef, pointerToAtomPtrToBeWrittenTo: Ptr, pointerToArityToBeWrittenTo: Ptr): OperationResult
+    getCompoundNameArity(term: TermRef, pointerToAtomPtrToBeWrittenTo: Ptr, pointerToArityToBeWrittenTo: Ptr): OperationResult
+    getArg(index: number, term: TermRef, output: TermRef): OperationResult
+    copyTermRef(term: TermRef): TermRef
+    putInteger(term: TermRef, integer: number): OperationResult
+    getInteger(term: TermRef, pointerToIntToBeWrittenTo: Ptr): OperationResult
+    putTerm(into: TermRef, from: TermRef): OperationResult
+    getFloat(term: TermRef, pointerToDoubleToBeWrittenTo: Ptr): OperationResult
+    getList(term: TermRef, head: TermRef, tail: TermRef): OperationResult
 }
 
 const createBindings = (): Bindings => ({
@@ -165,7 +171,13 @@ const createBindings = (): Bindings => ({
     getChars: cwrap("PL_get_chars", "number", ["number", "number", "number"]),
     getNameArity: cwrap("PL_get_name_arity", "number", ["number", "number", "number"]),
     getCompoundNameArity: cwrap("PL_get_compound_name_arity", "number", ["number", "number", "number"]),
-    getArg: cwrap("PL_get_arg", "number", ["number", "number", "number"])
+    getArg: cwrap("PL_get_arg", "number", ["number", "number", "number"]),
+    copyTermRef: cwrap("PL_copy_term_ref", "number", ["number"]),
+    putInteger: cwrap("PL_put_integer", "number", ["number", "number"]),
+    getInteger: cwrap("PL_get_integer", "number", ["number", "number"]),
+    putTerm: cwrap("PL_put_term", "number", ["number", "number"]),
+    getFloat: cwrap("PL_get_float", "number", ["number", "number"]),
+    getList: cwrap("PL_get_list", "number", ["number", "number", "number"])
 })
 
 export type Prolog = PLHeaderConstants & Bindings
