@@ -3,13 +3,16 @@ import path from "path";
 import CopyPlugin from "copy-webpack-plugin";
 
 module.exports = {
-    entry: "./src/main.ts",
+    entry: {
+        main: "./src/main.ts",
+        worker: "./src/worker.ts",
+    },
     devtool: "inline-source-map",
     resolve: {
         extensions: [".ts", ".tsx", ".js", ".jsx"],
     },
     output: {
-        filename: "bundle.js",
+        filename: "[name].js",
         path: path.resolve(__dirname, "dist"),
     },
     module: {

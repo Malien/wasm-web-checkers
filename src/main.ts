@@ -1,5 +1,5 @@
 import { initPL, TermType, TermRef } from "./swipl"
-import util, { collectList, constructArgsArray, newTermRefs, openQuery } from "./util"
+import util, { collectList, constructArgsArray, newTermRefs } from "./util"
 import typecheck from "./typecheck"
 import { BoardRow, Cell, GameBoard, Move, Position } from "./common"
 import "./styles.sass"
@@ -13,6 +13,13 @@ const blackMoveButton = document.getElementById("move-black") as HTMLButtonEleme
 type PLMove = Move & {
     nextBoard: TermRef
 }
+
+const worker = new Worker("./worker.js", { name: "swipl-runtime", type: "classic" })
+worker.addEventListener("message", ev => {
+    if (ev.data === "pl-loaded") {
+        worker.postMessage(ev.data)
+    }
+})
 
 // Stay put!
 ;(async () => {

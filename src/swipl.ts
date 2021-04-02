@@ -1,4 +1,4 @@
-import { NewType, unwrap, wrap } from "./newtype"
+import { NewType, wrap } from "./newtype"
 
 const filterNumericKeys = <T>(obj: T): Omit<T, number> =>
     Object.fromEntries(
@@ -63,21 +63,21 @@ export enum CharBufferFlags {
     CVT_ATOMIC = CVT_NUMBER | CVT_ATOM | CVT_STRING,
     CVT_WRITE = 0x00000080,
     CVT_WRITE_CANONICAL = 0x00000080,
-    CVT_WRITEQ = 0x000000C0,
+    CVT_WRITEQ = 0x000000c0,
     CVT_ALL = CVT_ATOMIC | CVT_LIST,
     CVT_MASK = 0x00000fff,
 
-    CVT_EXCEPTION = 0x00001000	/* throw exception on error */,
-    CVT_VARNOFAIL = 0x00002000	/* return 2 if argument is unbound */,
+    CVT_EXCEPTION = 0x00001000 /* throw exception on error */,
+    CVT_VARNOFAIL = 0x00002000 /* return 2 if argument is unbound */,
 
-    BUF_DISCARDABLE = 0x00000000	/* Store in single thread-local buffer */,
-    BUF_STACK = 0x00010000	/* Store in stack of buffers */,
-    BUF_MALLOC = 0x00020000	/* Store using PL_malloc() */,
-    BUF_ALLOW_STACK = 0x00040000	/* Allow pointer into (global) stack */,
+    BUF_DISCARDABLE = 0x00000000 /* Store in single thread-local buffer */,
+    BUF_STACK = 0x00010000 /* Store in stack of buffers */,
+    BUF_MALLOC = 0x00020000 /* Store using PL_malloc() */,
+    BUF_ALLOW_STACK = 0x00040000 /* Allow pointer into (global) stack */,
 
-    BUF_RING = BUF_STACK   /* legacy ring buffer */,
+    BUF_RING = BUF_STACK /* legacy ring buffer */,
 
-    REP_ISO_LATIN_1 = 0x00000000	/* output representation */,
+    REP_ISO_LATIN_1 = 0x00000000 /* output representation */,
     REP_UTF8 = 0x00100000,
     REP_MB = 0x00200000,
 }
@@ -132,9 +132,21 @@ export interface Bindings {
     //     pointerToCharPointerToBeWrittenTo: number,
     //     pointerToSizeToBeWrittenTo: number
     // ): OperationResult
-    getChars(term: TermRef, pointerToCharPointerToBeWrittenTo: Ptr, flags: CharBufferFlags): OperationResult
-    getNameArity(term: TermRef, pointerToAtomPtrToBeWrittenTo: Ptr, pointerToArityToBeWrittenTo: Ptr): OperationResult
-    getCompoundNameArity(term: TermRef, pointerToAtomPtrToBeWrittenTo: Ptr, pointerToArityToBeWrittenTo: Ptr): OperationResult
+    getChars(
+        term: TermRef,
+        pointerToCharPointerToBeWrittenTo: Ptr,
+        flags: CharBufferFlags
+    ): OperationResult
+    getNameArity(
+        term: TermRef,
+        pointerToAtomPtrToBeWrittenTo: Ptr,
+        pointerToArityToBeWrittenTo: Ptr
+    ): OperationResult
+    getCompoundNameArity(
+        term: TermRef,
+        pointerToAtomPtrToBeWrittenTo: Ptr,
+        pointerToArityToBeWrittenTo: Ptr
+    ): OperationResult
     getArg(index: number, term: TermRef, output: TermRef): OperationResult
     copyTermRef(term: TermRef): TermRef
     putInteger(term: TermRef, integer: number): OperationResult
@@ -170,14 +182,18 @@ const createBindings = (): Bindings => ({
     // getStringChars: cwrap("", "number", ["number", "number", "number"]),
     getChars: cwrap("PL_get_chars", "number", ["number", "number", "number"]),
     getNameArity: cwrap("PL_get_name_arity", "number", ["number", "number", "number"]),
-    getCompoundNameArity: cwrap("PL_get_compound_name_arity", "number", ["number", "number", "number"]),
+    getCompoundNameArity: cwrap("PL_get_compound_name_arity", "number", [
+        "number",
+        "number",
+        "number",
+    ]),
     getArg: cwrap("PL_get_arg", "number", ["number", "number", "number"]),
     copyTermRef: cwrap("PL_copy_term_ref", "number", ["number"]),
     putInteger: cwrap("PL_put_integer", "number", ["number", "number"]),
     getInteger: cwrap("PL_get_integer", "number", ["number", "number"]),
     putTerm: cwrap("PL_put_term", "number", ["number", "number"]),
     getFloat: cwrap("PL_get_float", "number", ["number", "number"]),
-    getList: cwrap("PL_get_list", "number", ["number", "number", "number"])
+    getList: cwrap("PL_get_list", "number", ["number", "number", "number"]),
 })
 
 export type Prolog = PLHeaderConstants & Bindings
@@ -226,11 +242,11 @@ export const initPL = () =>
         const handler = (ev: MessageEvent) => {
             if (ev.data === "pl-loaded") {
                 resolve(globalPL!)
-                window.removeEventListener("message", handler)
+                globalThis.removeEventListener("message", handler)
             }
         }
 
-        window.addEventListener("message", handler)
+        globalThis.addEventListener("message", handler)
     })
 
 declare global {
@@ -255,17 +271,68 @@ const readStdin = () => {
     }
 }
 
-// Stub Module object. Used by swipl-web.js to
-// populate the actual Module object.
-window.Module = ({
-    noInitialRun: true,
-    locateFile: url => `/swipl-wasm/${url}`,
-    print: console.log,
-    printErr: console.error,
-    // @ts-ignore
-    preRun: [() => FS.init(readStdin)], // sets up stdin
-    onRuntimeInitialized: () => {
-        globalPL = innerInitPL()
-        window.postMessage("pl-loaded", window.origin)
-    },
-} as Partial<EmscriptenModule>) as any
+const postMessage = (message: any) => {
+    if (globalThis.Window) {
+        globalThis.postMessage(message, origin)
+    } else {
+        ;(globalThis as any).postMessage(message)
+    }
+}
+
+const configureModule = (location: string): EmscriptenModule =>
+    (({
+        noInitialRun: true,
+        locateFile: url => `/${location}/${url}`,
+        print: console.log,
+        printErr: console.error,
+        // @ts-ignore
+        preRun: [() => FS.init(readStdin)], // sets up stdin
+        onRuntimeInitialized: () => {
+            globalPL = innerInitPL()
+            postMessage("pl-loaded")
+        },
+    } as Partial<EmscriptenModule>) as any)
+
+/**
+ * This will fetch all of the binaries and glue code from provided directory
+ * and evaluate it's contents using `eval` function! This is expected to be
+ * called only once! use initPL() to get promise to the initialized runtime.
+ * Module object will be attached to the global object.
+ * @param location path to the directory with the swipl-wasm dist. 
+ *                 Do not put slashes at the end of string.
+ * @returns promise to the loaded swipl bindings
+ */
+export const loadSwiplBinary = (location: string) => {
+    globalThis.Module = configureModule(location)
+    fetch(globalThis.Module.locateFile("swipl-web.js", undefined as any))
+        .then(r => r.text())
+        .then(eval)
+    return initPL()
+}
+
+/**
+ * If you are loading swipl-wasm using glue code in the script tag, use this one!
+ * This is expected to be called only once! use initPL() to get promise to the
+ * initialized runtime.
+ * @param location path to the directory with the swipl-wasm dist. 
+ *                 Do not put slashes at the end of string.
+ * @returns promise to the loaded swipl bindings
+ */
+export const configureExternallyLoadedSwipl = (location: string) => {
+    globalThis.Module = configureModule(location)
+}
+
+// // Stub Module object. Used by swipl-web.js to
+// // populate the actual Module object.
+// globalThis.Module = ({
+//     noInitialRun: true,
+//     locateFile: url => `/swipl-wasm/${url}`,
+//     print: console.log,
+//     printErr: console.error,
+//     // @ts-ignore
+//     preRun: [() => FS.init(readStdin)], // sets up stdin
+//     onRuntimeInitialized: () => {
+//         globalPL = innerInitPL()
+//         postMessage("pl-loaded")
+//     },
+// } as Partial<EmscriptenModule>) as any
