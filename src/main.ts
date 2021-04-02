@@ -6,7 +6,9 @@ import "./styles.sass"
 import { render } from "lit-html"
 import { Board } from "./board"
 
-const mountPoint = document.getElementById("mount")!
+const mountPoint = document.getElementById("mount") as HTMLDivElement
+const whiteMoveButton = document.getElementById("move-white") as HTMLButtonElement
+const blackMoveButton = document.getElementById("move-black") as HTMLButtonElement
 
 type PLMove = Move & {
     nextBoard: TermRef
@@ -36,6 +38,8 @@ type PLMove = Move & {
         testBoard4: PL.predicate("test_board_4", 1, "user"),
         testBoard5: PL.predicate("test_board_5", 1, "user"),
         testBoard6: PL.predicate("test_board_6", 1, "user"),
+        minimax: PL.predicate("minimax", 5, "user"),
+        alphabeta: PL.predicate("alphabeta", 5, "user"),
         listAvailableMoves: PL.predicate("list_available_moves", 3, "user"),
     }
 
@@ -111,14 +115,6 @@ type PLMove = Move & {
         return collectList(PL, moves, retrieveMoveOrEatList).flat()
     }
 
-    await loadProgramFile(await fetch("./main.pl"))
-
-    // const boardTerm = initialBoard()
-    const boardTerm = testBoard(6)
-    let gameBoard = retrieveBoard(boardTerm)
-    let currentMoves: PLMove[] = availableMoves(boardTerm, "white")
-    // let currentMoves: PLMove[] = []
-
     const showMoves = ([x, y]: Position, cell: Cell) => {
         const board = PL.copyTermRef(boardTerm)
         const [piece, xcoord, ycoord, moves] = newTermRefs(PL, 4)
@@ -171,6 +167,68 @@ type PLMove = Move & {
             )
         }
     }
+
+    // const evaluateBestMove = (
+    //     forPlayer: "white" | "black"
+    // ): [move: PLMove, score: number] | undefined => {
+    //     const [player, board, nextMove, score] = newTermRefs(PL, 4)
+    //     PL.putAtomChars(player, forPlayer)
+    //     PL.putTerm(board, boardTerm)
+    //     if (callPredicate(predicates.startAlphabeta, player)) {
+    //         return [retrieveMove(nextMove), getInteger(score)]
+    //     } else {
+    //         console.log(`Can't find plays for ${forPlayer}`)
+    //         return undefined
+    //     }
+    // }
+
+    const evaluateBestMove = (
+        forPlayer: "white" | "black",
+        using: "minimax" | "alphabeta",
+        searchDepth: number
+    ): [move: PLMove, score: number] | undefined => {
+        const pred = predicates[using]
+        const [board, player, maxDepth, nextMove, score] = newTermRefs(PL, 5)
+        PL.putTerm(board, boardTerm)
+        PL.putAtomChars(player, forPlayer)
+        PL.putInteger(maxDepth, searchDepth)
+        if (!callPredicate(pred, board)) return undefined
+        return [retrieveMove(nextMove), getInteger(score)]
+    }
+
+    const makeBestMove = (forPlayer: "white" | "black") => {
+        const play = evaluateBestMove(forPlayer, "alphabeta", 4)
+        if (!play) return alert(`No plays for white`)
+        const [{ nextBoard }, score] = play
+        console.log("score", score)
+        PL.putTerm(boardTerm, nextBoard)
+        gameBoard = retrieveBoard(boardTerm)
+
+        render(
+            Board({
+                board: gameBoard,
+                onClick: showMoves,
+                onMove: makeMove,
+            }),
+            mountPoint
+        )
+    }
+
+    await loadProgramFile(await fetch("./main.pl"))
+
+    const boardTerm = initialBoard()
+    // const boardTerm = testBoard(1)
+    let gameBoard = retrieveBoard(boardTerm)
+    let currentMoves: PLMove[] = availableMoves(boardTerm, "white")
+    // let currentMoves: PLMove[] = []
+
+    whiteMoveButton.addEventListener("click", () => {
+        makeBestMove("white")
+    })
+
+    blackMoveButton.addEventListener("click", () => {
+        makeBestMove("black")
+    })
 
     render(
         Board({

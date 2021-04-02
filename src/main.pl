@@ -1,4 +1,5 @@
-:-use_module(library(lists)).
+:- use_module(library(lists)).
+:- use_module(library(apply)).
 
 % board(-Board).
 % Creates a board container, with uninitialized positions
@@ -455,11 +456,14 @@ list_available_moves(Board,Player,Moves):-
 % AUXILIARY
 % Collects either the available eats or the available moves.
 list_available_moves_aux(Board,Positions,Moves):-
-	list_all_eat_moves(Board,Positions,Moves),
+	list_all_final_eat_moves(Board,Positions,Moves),
 	Moves \= [], !.
 list_available_moves_aux(Board,Positions,Moves):-
 	list_all_moves(Board,Positions,Moves).
 
+list_all_final_eat_moves(Board, Positions, FlatMoves) :-
+    list_all_eat_moves(Board, Positions, Moves),
+    maplist(last, Moves, FlatMoves).
 
 % list_all_eat_moves(+Board,+Positions,-Moves)
 % AUXILIAR
@@ -526,8 +530,6 @@ remove_empty([],[]):- !.
 remove_empty([[]|L],L1):- !, remove_empty(L,L1).
 remove_empty([X|L],[X|L1]):- remove_empty(L,L1).
 
-
-
 next_player(white,black).
 next_player(black,white).
 
@@ -536,23 +538,31 @@ player_piece(white,wq).
 player_piece(black,b).
 player_piece(black,bq).
 
-
 % board_weight(+Piece,+X,+Y,-W).
-board_weight(w,_,1,5).
-board_weight(w,_,2,3).
-board_weight(w,_,3,2).
-board_weight(w,_,6,2).
-board_weight(w,_,7,3).
-board_weight(w,_,8,5).
-board_weight(w,_,_,1).
-board_weight(b,_,1,5).
-board_weight(b,_,2,3).
-board_weight(b,_,3,2).
-board_weight(b,_,6,2).
-board_weight(b,_,7,3).
-board_weight(b,_,8,5).
-board_weight(b,_,_,1).
+% board_weight(w,_,1,3).
+% board_weight(w,_,2,2).
+% board_weight(w,_,3,1).
+% board_weight(w,_,6,1).
+% board_weight(w,_,7,2).
+% board_weight(w,_,8,3).
+% board_weight(w,_,_,1).
+% board_weight(b,_,1,3).
+% board_weight(b,_,2,2).
+% board_weight(b,_,3,1).
+% board_weight(b,_,6,1).
+% board_weight(b,_,7,2).
+% board_weight(b,_,8,3).
+% board_weight(b,_,_,4).
 board_weight(_,_,_,1).
+
+piece_value(1, 0).
+piece_value(0, 0).
+piece_value(w, 1).
+piece_value(b, -1).
+piece_value(wq, 5).
+piece_value(bq, -5).
+
+evaluate_board(Board, Score) :- evaluate_board(Board, Score, 1), !.
 
 evaluate_board(Board, 200, _):-
     \+list_available_moves(Board,black,_),
@@ -569,7 +579,6 @@ evaluate_board(Board, Eval, Iterator) :-
     IteratorNext is Iterator + 1,
     evaluate_board(Board, RemainingEval, IteratorNext),
     Eval is LineEval + RemainingEval.
-    
 
 evaluate_line(Line, 0, _, Column) :- Column > 8, !.
 
@@ -581,95 +590,104 @@ evaluate_line(Line, Eval, Row, Column) :-
 	evaluate_line(Line, RemainingEval, Row, IteratorNext),
 	Eval is RemainingEval + PieceValue * W.
 
+minimax(Board, Player, MaxDepth, NextMove, Eval) :- minimax(Board, Player, MaxDepth, NextMove, Eval, 0).
 
-minimax(Player, Board, NextMove, Eval, Depth) :-
-	Depth < 5,
-	NewDepth is Depth + 1,
-	next_player(Player, OtherPlayer),
-	list_available_moves(Board, OtherPlayer, Moves),
-	best(OtherPlayer, Moves, NextMove, Eval, NewDepth), !.
+minimax(Board, Player, MaxDepth, NextMove, Eval, Depth) :-
+    Depth < MaxDepth, !,
+    % print_message(trace, Depth),
+    list_available_moves(Board, Player, Moves),
+    NextDepth is Depth + 1,
+    best_move(Player, Moves, MaxDepth, NextDepth, NextMove, Eval).
 
-minimax(Player, Board, _, Eval, Depth) :-
-	evaluate_board(Board, Eval, 1), !.
+minimax(Board, _, _, _, Eval, _) :-
+    evaluate_board(Board, Eval).
 
+best_move(Player, [Move | Moves], MaxDepth, Depth, NextMove, Score) :- 
+    move_board(Move, Board),
+    next_player(Player, NextPlayer),
+    minimax(Board, NextPlayer, MaxDepth, _, OponentScore, Depth),
+    best_move(Player, Move, OponentScore, Moves, MaxDepth, Depth, NextMove, Score).
 
+best_move(Player, BestMove, BestScore, [CurrentMove | Moves], MaxDepth, Depth, Move, Score) :-
+    move_board(CurrentMove, Board),
+    next_player(Player, NextPlayer),
+    minimax(Board, NextPlayer, MaxDepth, _, OponentScore, Depth),
+    best_of(Player, BestMove, BestScore, CurrentMove, OponentScore, WinnerMove, WinnerScore),
+    best_move(Player, WinnerMove, WinnerScore, Moves, MaxDepth, Depth, Move, Score).
 
+best_move(_, Move, Score, [], _, _, Move, Score).
 
-best(Player, [Move], Move, Eval, Depth) :-
-	move_board(Move, Board),
-	minimax(Player, Board, _, Eval, Depth), !.
+best_of(Player, Move1, Score1, _, Score2, Move1, Score1) :-
+    maximizing(Player),
+    Score1 > Score2,
+    !.
 
-best(Player, [Move|Moves], BestMove, BestEval, Depth) :-
-	dechain(Move, Move1),
-	move_board(Move1, Board),
-	minimax(Player, Board, NextMove, Eval, Depth),
-	best(Player, Moves, BestMove1, BestEval1, Depth),
-	better_of(Player, Move1, Eval, BestMove1, BestEval1, BestMove, BestEval).
+best_of(Player, _, _, Move, Score, Move, Score) :- maximizing(Player), !.
 
-dechain([Move],Move).
-dechain([Move|Moves],Last) :- last(Moves, Last).
-dechain(Move, Move).
+best_of(Player, Move1, Score1, _, Score2, Move1, Score1) :-
+    minimizing(Player),
+    Score1 < Score2,
+    !.
+
+best_of(Player, _, _, Move, Score, Move, Score) :- minimizing(Player), !.
 
 maximizing(white).
 minimizing(black).
 
 move_board(m(_,_,_,_, Board), Board).
 move_board(e(_,_,_,_, Board), Board).
-%move_board([e(_,_,_,_, Board)], Board).
-better_of(Player, Move1, Eval1, Move2, Eval2, Move1, Eval1) :-
-	maximizing(Player),
-	Eval1 >= Eval2, !.
-better_of(Player, Move1, Eval1, Move2, Eval2, Move2, Eval2) :-
-	maximizing(Player),
-	Eval2 >= Eval1, !.
 
-better_of(Player, Move1, Eval1, Move2, Eval2, Move1, Eval1) :-
-	minimizing(Player),
-	Eval1 =< Eval2, !.
-better_of(Player, Move1, Eval1, Move2, Eval2, Move2, Eval2) :-
-	minimizing(Player),
-	Eval2 =< Eval1, !.
+alphabeta(Board, Player, MaxDepth, NextMove, Score) :- alphabeta(Board, Player, MaxDepth, -1000, 1000, NextMove, Score, 0).
 
-	
-piece_value(1, 0).
-piece_value(0, 0).
-piece_value(w, 1).
-piece_value(b, -1).
-piece_value(wq, 5).
-piece_value(bq, -5).
+alphabeta(Board, Player, MaxDepth, Alpha, Beta, NextMove, Score, Depth) :-
+    MaxDepth > Depth, !,
+    list_available_moves(Board, Player, Moves),
+    NextDepth is Depth + 1,
+    bounded_best(Player, Moves, MaxDepth, Alpha, Beta, NextMove, Score, NextDepth).
 
-alphabeta(Player, Alpha, Beta, Board, NextMove, Eval, Depth) :-
-	Depth < 30,
-	NewDepth is Depth + 1,
-	list_available_moves(Board, Player, Moves),
-	bounded_best(Player, Alpha, Beta, Moves, NextMove, Eval, NewDepth), !.
+alphabeta(Board, _, _, _, _, _, Score, _) :-
+    evaluate_board(Board, Score).
 
-alphabeta(Player, Alpha, Beta, Board, NextMove, Eval, Depth) :-
-	evaluate_board(Board, Eval, 1), !.
+bounded_best(Player, [Move | Moves], MaxDepth, Alpha, Beta, NextMove, Score, Depth) :-
+    maximizing(Player), !,
+    move_board(Move, Board),
+    next_player(Player, NextPlayer),
+    alphabeta(Board, NextPlayer, MaxDepth, Alpha, Beta, _, CurrentScore, Depth),
+    NextAlpha is max(Alpha, CurrentScore),
+    bounded_best(Player, Moves, MaxDepth, NextAlpha, Beta, CurrentScore, Move, NextMove, Score, Depth).
 
-bounded_best(Player, Alpha, Beta, [Move|Moves], BestMove, BestEval, Depth) :-
-	dechain(Move, Move1),
-	move_board(Move1, Board),
-	next_player(Player, NextPlayer),
-	alphabeta(NextPlayer, Alpha, Beta, Board, _, Eval, Depth),
-	good_enough(Player, Moves, Alpha, Beta, Move1, Eval, BestMove, BestEval, Depth).
+bounded_best(Player, [Move | Moves], MaxDepth, Alpha, Beta, NextMove, Score, Depth) :-
+    minimizing(Player), !,
+    move_board(Move, Board),
+    next_player(Player, NextPlayer),
+    alphabeta(Board, NextPlayer, MaxDepth, Alpha, Beta, _, CurrentScore, Depth),
+    NextBeta is min(Beta, CurrentScore),
+    bounded_best(Player, Moves, MaxDepth, Alpha, NextBeta, CurrentScore, Move, NextMove, Score, Depth).
 
-good_enough(Player, [], _, _, Move, Eval, Move, Eval, Depth) :- !.
+bounded_best(Player, _, _, Alpha, Beta, Score, Move, Move, Score, _) :-
+    maximizing(Player),
+    Beta =< Alpha, !.
 
-good_enough(Player, _, Alpha, Beta, Move, Eval, Move, Eval, Depth) :-
-	minimizing(Player), Eval > Alpha, !.
+bounded_best(Player, _, _, Alpha, Beta, Score, Move, Move, Score, _) :-
+    minimizing(Player),
+    Alpha =< Beta, !.
 
-good_enough(Player, _, Alpha, Beta, Move, Eval, Move, Eval, Depth) :-
-	maximizing(Player), Eval < Beta, !.
+bounded_best(Player, [Move | Moves], MaxDepth, Alpha, Beta, PrevScore, PrevMove, NextMove, Score, Depth) :-
+    maximizing(Player), !,
+    move_board(Move, Board),
+    next_player(Player, NextPlayer),
+    alphabeta(Board, NextPlayer, MaxDepth, Alpha, Beta, _, CurrentScore, Depth),
+    NextAlpha is max(Alpha, CurrentScore),
+    best_of(Player, PrevMove, PrevScore, Move, CurrentScore, WinningMove, WinningScore),
+    bounded_best(Player, Moves, MaxDepth, NextAlpha, Beta, WinningScore, WinningMove, NextMove, Score, Depth).
 
-good_enough(Player, Moves, Alpha, Beta, Move, Eval, BestMove, BestEval, Depth) :-
-	new_bounds(Player, Alpha, Beta, Eval, NewAlpha, NewBeta),
-	bounded_best(Player, NewAlpha, NewBeta, Moves, Move1, Eval1, Depth),
-	better_of(Player, Move, Eval, Move1, Eval1, BestMove, BestEval).
+bounded_best(Player, [Move | Moves], MaxDepth, Alpha, Beta, PrevScore, PrevMove, NextMove, Score, Depth) :-
+    minimizing(Player), !,
+    move_board(Move, Board),
+    next_player(Player, NextPlayer),
+    alphabeta(Board, NextPlayer, MaxDepth, Alpha, Beta, _, CurrentScore, Depth),
+    NextBeta is min(Beta, CurrentScore),
+    best_of(Player, PrevMove, PrevScore, Move, CurrentScore, WinningMove, WinningScore),
+    bounded_best(Player, Moves, MaxDepth, Alpha, NextBeta, WinningScore, WinningMove, NextMove, Score, Depth).
 
-new_bounds(Player, Alpha, Beta, Eval, Eval, Beta) :-
-	minimizing(Player), Eval > Alpha, !.
-
-
-new_bounds(Player, Alpha, Beta, Eval, Alpha, Eval) :-
-	maximizing(Player), Eval < Beta, !.
+bounded_best(_, [], _, _, _, Score, Move, Move, Score, _) :- !.
