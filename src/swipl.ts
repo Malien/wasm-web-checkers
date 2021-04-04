@@ -235,49 +235,26 @@ const innerInitPL = () => {
     return pl
 }
 
-export const initPL = () =>
-    new Promise<Prolog>(resolve => {
-        if (globalPL) return resolve(globalPL)
+let __resolvePromise__: ((PL: Prolog) => void) | undefined
+let __rejectPromise__: ((err?: any) => void) | undefined
 
-        const handler = (ev: MessageEvent) => {
-            if (ev.data === "pl-loaded") {
-                resolve(globalPL!)
-                globalThis.removeEventListener("message", handler)
-            }
-        }
+const plPromise = new Promise<Prolog>((resolve, reject) => {
+    __resolvePromise__ = resolve
+    __rejectPromise__ = reject
+}).then(PL => {
+    __resolvePromise__ = undefined
+    __rejectPromise__ = undefined
+    return PL
+})
 
-        globalThis.addEventListener("message", handler)
-    })
+export const initPL = () => plPromise
 
 declare global {
     var Module: EmscriptenModule
 }
 
-let stdin = ""
-let stdinPosition = 0
-// We use this to provide data into
-// the SWI stdin.
-const setStdin = (str: string) => {
-    stdin = str
-    stdinPosition = 0
-}
-const readStdin = () => {
-    if (stdinPosition >= stdin.length) {
-        return null
-    } else {
-        const code = stdin.charCodeAt(stdinPosition)
-        stdinPosition++
-        return code
-    }
-}
-
-const postMessage = (message: any) => {
-    if (globalThis.Window) {
-        globalThis.postMessage(message, origin)
-    } else {
-        ;(globalThis as any).postMessage(message)
-    }
-}
+// We do not expose stdin yet
+const readStdin = () => null
 
 const configureModule = (location: string): EmscriptenModule =>
     (({
@@ -288,38 +265,94 @@ const configureModule = (location: string): EmscriptenModule =>
         // @ts-ignore
         preRun: [() => FS.init(readStdin)], // sets up stdin
         onRuntimeInitialized: () => {
-            globalPL = innerInitPL()
-            postMessage("pl-loaded")
+            try {
+                __resolvePromise__?.(innerInitPL())
+            } catch (e) {
+                __rejectPromise__?.(e)
+            }
         },
     } as Partial<EmscriptenModule>) as any)
+
+const locateFile = (url: string) => globalThis.Module.locateFile(url, undefined as any)
 
 /**
  * This will fetch all of the binaries and glue code from provided directory
  * and evaluate it's contents using `eval` function! This is expected to be
- * called only once! use initPL() to get promise to the initialized runtime.
- * Module object will be attached to the global object.
- * @param location path to the directory with the swipl-wasm dist. 
+ * called only once! Use `initPL()` to get promise to the initialized runtime.
+ * Module object will be attached to the global scope.
+ * @param location path to the directory with the swipl-wasm dist.
  *                 Do not put slashes at the end of string.
  * @returns promise to the loaded swipl bindings
  */
 export const loadSwiplBinary = (location: string) => {
     globalThis.Module = configureModule(location)
-    fetch(globalThis.Module.locateFile("swipl-web.js", undefined as any))
+    fetch(locateFile("swipl-web.js"))
         .then(r => r.text())
         .then(eval)
     return initPL()
 }
 
 /**
+ * This will load swipl js glue and wasm binaries using importScripts function
+ * found in Web Workers. This will block the execution until script is loaded.
+ * This is expected to be called only once! Use `initPL()` to get promise to the
+ * initialized runtime. Module object will be attached to the global scope.
+ * @param location path to the directory with the swipl-wasm dist.
+ *                 Do not put slashes at the end of string.
+ * @returns promise to the loaded swipl bindings
+ */
+export const loadSwiplInWorker = (location: string) => {
+    if (!self) throw new Error("Only available in WebWorkers")
+    globalThis.Module = configureModule(location)
+    ;(globalThis as any).importScripts(locateFile("swipl-web.js"))
+    return initPL()
+}
+
+/**
  * If you are loading swipl-wasm using glue code in the script tag, use this one!
- * This is expected to be called only once! use initPL() to get promise to the
- * initialized runtime.
- * @param location path to the directory with the swipl-wasm dist. 
+ * Make sure this function is called before loading swipl-wasm glue code, as it
+ * configures module settings. This is expected to be called only once! Use
+ * `initPL()` to get promise to the initialized runtime. Module object will be
+ * attached to the global scope.
+ * @param location path to the directory with the swipl-wasm dist.
  *                 Do not put slashes at the end of string.
  * @returns promise to the loaded swipl bindings
  */
 export const configureExternallyLoadedSwipl = (location: string) => {
     globalThis.Module = configureModule(location)
+}
+
+const loadScript = (src: string, async = true, type = "text/javascript") =>
+    new Promise((resolve, reject) => {
+        try {
+            const el = document.createElement("script")
+            const container = document.head || document.body
+
+            el.type = type
+            el.async = async
+            el.src = src
+
+            el.addEventListener("load", () => {
+                resolve({ status: true })
+            })
+
+            el.addEventListener("error", () => {
+                reject({
+                    status: false,
+                    message: `Failed to load the script ${src}`,
+                })
+            })
+
+            container.appendChild(el)
+        } catch (err) {
+            reject(err)
+        }
+    })
+
+export const loadSwiplInDocument = async (location: string) => {
+    globalThis.Module = configureModule(location)
+    await loadScript(locateFile("swipl-web.js"))
+    return initPL()
 }
 
 // // Stub Module object. Used by swipl-web.js to

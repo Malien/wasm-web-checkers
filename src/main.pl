@@ -499,7 +499,8 @@ next_chain_eat(Board, E, X, Y, Move) :-
 next_move_and_eat(Board, E, X, Y, Move) :- next_move(Board, E, X, Y, Move).
 next_move_and_eat(Board, E, X, Y, Move) :- next_chain_eat(Board, E, X, Y, Move).
 
-all_moves(Board, E, X, Y, Moves) :- 
+all_moves(Board, X, Y, Moves) :- 
+	pos(Board, X, Y, E),
     findall(M, next_move_and_eat(Board, E, X, Y, M), Moves), !.
 
 % list_all_positions(+Board,+Player,-Positions)

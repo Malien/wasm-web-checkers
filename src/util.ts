@@ -177,6 +177,7 @@ export const bind = bindPrologFunctions({
     openQuery,
     getInteger,
     getFloat,
+    collectList
 })
 
 export default { bind }

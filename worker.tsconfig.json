@@ -1,0 +1,13 @@
+{
+    "$schema": "http://json.schemastore.org/tsconfig",
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "lib": [
+            "ES2020",
+            "WebWorker"
+        ]
+    },
+    "files": [
+        "src/worker.ts"
+    ]
+}
