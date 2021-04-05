@@ -1,10 +1,10 @@
 /// <reference lib="ES2020" />
 
 import { expose } from "comlink"
-import { SwiplWorker, PLMove, Cell, BoardRow, GameBoard } from "./common"
+import { SwiplWorker, PLMove, Cell, BoardRow, GameBoard, Position, Player } from "./common"
 import { loadSwiplInWorker, TermRef, TermType } from "./swipl"
 import { collectList, constructArgsArray, newTermRefs, bind as bindUtil } from "./util"
-import { bind as bindTypecheck} from "./typecheck";
+import { bind as bindTypecheck } from "./typecheck"
 
 const PLPromise = loadSwiplInWorker("./swipl-wasm")
 
@@ -24,6 +24,8 @@ const configured = PLPromise.then(async PL => {
         minimax: PL.predicate("minimax", 5, "user"),
         alphabeta: PL.predicate("alphabeta", 5, "user"),
         listAvailableMoves: PL.predicate("list_available_moves", 3, "user"),
+        canEat: PL.predicate("can_eat", 3, "user"),
+        nextPlayer: PL.predicate("next_player", 2, "user"),
     }
 
     const util = bindUtil(PL)
@@ -81,22 +83,40 @@ const configured = PLPromise.then(async PL => {
         return constructArgsArray(PL, boardTerm, retrieveRow, 8)
     }
 
-    return { PL, predicates, ...util, ...typecheck, retrieveBoard, retrieveMove, retrieveMoveOrEatList }
+    const retrievePosition = (positionTerm: TermRef): Position => {
+        typecheck.assertCompoundTermShape(positionTerm, "p", 3)
+
+        return constructArgsArray(PL, positionTerm, util.getInteger, 2)
+    }
+
+    return {
+        PL,
+        predicates,
+        ...util,
+        ...typecheck,
+        retrieveBoard,
+        retrieveMove,
+        retrieveMoveOrEatList,
+        retrievePosition,
+    }
 })
 
-type FuncKey<T, P extends keyof T> = P extends any ? T[P] extends AnyFunction ? P : never : never
+type FuncKey<T, P extends keyof T> = P extends any ? (T[P] extends AnyFunction ? P : never) : never
 
 type Awaited<T> = T extends PromiseLike<infer U> ? U : T
 type Conf = Awaited<typeof configured>
 type AnyFunction = (...args: any[]) => any
 type FuncConfKeys = FuncKey<Conf, keyof Conf>
-type Reexported<P extends FuncConfKeys> = (...args: Parameters<Conf[P]>) => Promise<ReturnType<Conf[P]>>
+type Reexported<P extends FuncConfKeys> = (
+    ...args: Parameters<Conf[P]>
+) => Promise<ReturnType<Conf[P]>>
 
-const reexport = <P extends FuncConfKeys>(prop: P): Reexported<P> => (async (...args: Parameters<Conf[P]>) => {
-    const conf = await configured
-    // @ts-ignore
-    return conf[prop](...args)
-}) as any
+const reexport = <P extends FuncConfKeys>(prop: P): Reexported<P> =>
+    (async (...args: Parameters<Conf[P]>) => {
+        const conf = await configured
+        // @ts-ignore
+        return conf[prop](...args)
+    }) as any
 
 const worker: SwiplWorker = {
     ready: configured.then(() => {}),
@@ -120,9 +140,16 @@ const worker: SwiplWorker = {
     retrieveMove: reexport("retrieveMove"),
     retrieveMoveOrEatList: reexport("retrieveMoveOrEatList"),
     retrieveBoard: reexport("retrieveBoard"),
+    retrievePosition: reexport("retrievePosition"),
 
     async availableMoves(boardTerm, player) {
-        const { PL, callPredicate, predicates, assertTermType, retrieveMoveOrEatList } = await configured
+        const {
+            PL,
+            callPredicate,
+            predicates,
+            assertTermType,
+            retrieveMoveOrEatList,
+        } = await configured
         const board = PL.copyTermRef(boardTerm)
         const [playerTerm, moves] = newTermRefs(PL, 2)
         PL.putAtomChars(playerTerm, player)
@@ -158,6 +185,23 @@ const worker: SwiplWorker = {
         return [retrieveMove(nextMove), getInteger(score)]
     },
 
+    async canEat(boardTerm, player) {
+        const { PL, predicates, callPredicate, retrievePosition } = await configured
+        const [board, playerTerm, positions] = newTermRefs(PL, 3)
+        PL.putTerm(board, boardTerm)
+        PL.putAtomChars(playerTerm, player)
+        if (!callPredicate(predicates.canEat, board)) throw new Error("Couldn't evaluate can_eat/3")
+        return collectList(PL, positions, retrievePosition)
+    },
+
+    async nextPlayer(player) {
+        const { PL, predicates, callPredicate, getAtomChars } = await configured
+        const [currentPlayer, nextPlayer] = newTermRefs(PL, 2)
+        PL.putAtomChars(currentPlayer, player)
+        if (!callPredicate(predicates.nextPlayer, currentPlayer))
+            throw new Error(`Next player for ${player} is not defined`)
+        return getAtomChars(nextPlayer) as Player
+    },
 }
 
 expose(worker)

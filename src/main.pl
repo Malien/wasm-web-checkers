@@ -504,17 +504,53 @@ list_all_moves(Board,[_|Positions],Moves):-
 next_chain_eat(Board, E, X, Y, Move) :-
     next_eat_move(Board, E, X, Y, e(X, Y, X1, Y1, Board2)),
     pos(Board2, X1, Y1, E1),
-    next_chain_eat(Board2, E1, X1, Y1, Move).
+    next_chain_eat(Board2, E1, X1, Y1, Move), !.
 
 next_chain_eat(Board, E, X, Y, Move) :-
     next_eat_move(Board, E, X, Y, Move).
 
 next_move_and_eat(Board, E, X, Y, Move) :- next_move(Board, E, X, Y, Move).
 next_move_and_eat(Board, E, X, Y, Move) :- next_chain_eat(Board, E, X, Y, Move).
+    % chain_eat(Board, p(E, X, Y), ComplexMoves),
+    % maplist(last, ComplexMoves, Moves),
+    % member(Move, Moves).
+
+move_of_position(X, Y, m(X, Y, _, _, _)).
+move_of_position(X, Y, e(X, Y, _, _, _)).
+
+first_eat_of_position(X, Y, [e(X, Y, _, _, _) | _]).
+
+not_first_eat_of_position(X, Y, Eats) :- not(first_eat_of_position(X, Y, Eats)).
 
 all_moves(Board, X, Y, Moves) :- 
     pos(Board, X, Y, E),
-    findall(M, next_move_and_eat(Board, E, X, Y, M), Moves), !.
+    player_piece(Player, E),
+    list_all_positions(Board, Player, Positions),
+    list_all_eat_moves(Board, Positions, EatMoves),
+    EatMoves \= [],
+    exclude(not_first_eat_of_position(X, Y), EatMoves, MultiMoves),
+    maplist(last, MultiMoves, Moves), !.
+
+all_moves(Board, X, Y, Moves) :-
+    pos(Board, X, Y, E),
+    findall(M, next_move_and_eat(Board, E, X, Y, M), Moves).
+
+position_of_move(Board, m(X, Y, _, _, _), Position) :-
+    pos(Board, X, Y, E),
+    Position = p(X, Y, E).
+
+position_of_move(Board, e(X, Y, _, _, _), Position) :-
+    pos(Board, X, Y, E),
+    Position = p(X, Y, E).
+
+first([X | _], X).
+
+can_eat(Board, Player, Positions) :-
+    list_all_positions(Board, Player, AllPositions),
+    list_all_eat_moves(Board, AllPositions, Moves),
+    maplist(first, Moves, FirstMoves),
+    maplist(position_of_move(Board), FirstMoves, MovePositions),
+    sort(MovePositions, Positions).
 
 % list_all_positions(+Board,+Player,-Positions)
 % AUXILIAR
@@ -585,7 +621,7 @@ evaluate_board(Board, -200, _):-
     \+list_available_moves(Board,white,_),
     list_available_moves(Board,black,_), !.
 
-evaluate_board(Board, 0, Iterator) :-  Iterator > 8, !.
+evaluate_board(_, 0, Iterator) :-  Iterator > 8, !.
 
 evaluate_board(Board, Eval, Iterator) :- 
     arg(Iterator, Board, Line), !,
@@ -594,7 +630,7 @@ evaluate_board(Board, Eval, Iterator) :-
     evaluate_board(Board, RemainingEval, IteratorNext),
     Eval is LineEval + RemainingEval.
 
-evaluate_line(Line, 0, _, Column) :- Column > 8, !.
+evaluate_line(_, 0, _, Column) :- Column > 8, !.
 
 evaluate_line(Line, Eval, Row, Column) :-
     arg(Column, Line, Piece), !,

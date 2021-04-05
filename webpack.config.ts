@@ -65,9 +65,14 @@ module.exports = {
         // new HtmlWebpackPlugin(),
         new CopyPlugin({
             patterns: [
-                { from: "public/index.html", to: "." },
-                { from: "public/manifest.json", to: "." },
-                { from: "src/main.pl", to: "." },
+                "public/index.html",
+                "public/manifest.json",
+                "public/icon@1x.png",
+                "public/icon@2x.png",
+                "public/icon@4x.png",
+                "src/main.pl",
+                // { from: "public/*", to: ".", flatten: true },
+                // { from: "src/main.pl", to: "." },
                 { from: "swipl-wasm/dist", to: "swipl-wasm" },
             ],
         }),
