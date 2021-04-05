@@ -13,6 +13,8 @@ self.addEventListener("install", ev => {
             .then(cache =>
                 cache.addAll([
                     "/",
+                    "/styles.css",
+                    "/manifest.json",
                     "/main.js",
                     "/worker.js",
                     "/main.pl",

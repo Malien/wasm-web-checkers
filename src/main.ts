@@ -24,9 +24,9 @@ algorithmSelect.listen("MDCSelect:change", () => {
 const mountPoint = document.getElementById("mount") as HTMLDivElement
 const controlsMountPoint = document.getElementById("mount-controls") as HTMLDivElement
 
-// if ('serviceWorker' in navigator) {
-//     navigator.serviceWorker.register("/sw.js")
-// }
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register("/sw.js")
+}
 
 const worker = wrap<SwiplWorker>(
     new Worker("./worker.js", { name: "swipl-runtime", type: "classic" })
