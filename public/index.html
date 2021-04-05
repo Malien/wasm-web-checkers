@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <link rel="manifest" href="manifest.json" />
+        <link rel="stylesheet" href="styles.css" />
+        <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet" />
+        <link
+            href="https://fonts.googleapis.com/css?family=Material+Icons&display=block"
+            rel="stylesheet"
+        />
+        <title>Prolog Web Checkers</title>
+    </head>
+    <body>
+        <div id="mount">
+            <div class="board-container">
+                <div class="board">
+                    <!-- ((.row>(.cell.white+.cell.black)*4+).row>(.cell.black+.cell.white)*4)*4 -->
+                    <div class="row">
+                        <div class="cell white"></div>
+                        <div class="cell black"></div>
+                        <div class="cell white"></div>
+                        <div class="cell black"></div>
+                        <div class="cell white"></div>
+                        <div class="cell black"></div>
+                        <div class="cell white"></div>
+                        <div class="cell black"></div>
+                    </div>
+                    <div class="row">
+                        <div class="cell black"></div>
+                        <div class="cell white"></div>
+                        <div class="cell black"></div>
+                        <div class="cell white"></div>
+                        <div class="cell black"></div>
+                        <div class="cell white"></div>
+                        <div class="cell black"></div>
+                        <div class="cell white"></div>
+                    </div>
+                    <div class="row">
+                        <div class="cell white"></div>
+                        <div class="cell black"></div>
+                        <div class="cell white"></div>
+                        <div class="cell black"></div>
+                        <div class="cell white"></div>
+                        <div class="cell black"></div>
+                        <div class="cell white"></div>
+                        <div class="cell black"></div>
+                    </div>
+                    <div class="row">
+                        <div class="cell black"></div>
+                        <div class="cell white"></div>
+                        <div class="cell black"></div>
+                        <div class="cell white"></div>
+                        <div class="cell black"></div>
+                        <div class="cell white"></div>
+                        <div class="cell black"></div>
+                        <div class="cell white"></div>
+                    </div>
+                    <div class="row">
+                        <div class="cell white"></div>
+                        <div class="cell black"></div>
+                        <div class="cell white"></div>
+                        <div class="cell black"></div>
+                        <div class="cell white"></div>
+                        <div class="cell black"></div>
+                        <div class="cell white"></div>
+                        <div class="cell black"></div>
+                    </div>
+                    <div class="row">
+                        <div class="cell black"></div>
+                        <div class="cell white"></div>
+                        <div class="cell black"></div>
+                        <div class="cell white"></div>
+                        <div class="cell black"></div>
+                        <div class="cell white"></div>
+                        <div class="cell black"></div>
+                        <div class="cell white"></div>
+                    </div>
+                    <div class="row">
+                        <div class="cell white"></div>
+                        <div class="cell black"></div>
+                        <div class="cell white"></div>
+                        <div class="cell black"></div>
+                        <div class="cell white"></div>
+                        <div class="cell black"></div>
+                        <div class="cell white"></div>
+                        <div class="cell black"></div>
+                    </div>
+                    <div class="row">
+                        <div class="cell black"></div>
+                        <div class="cell white"></div>
+                        <div class="cell black"></div>
+                        <div class="cell white"></div>
+                        <div class="cell black"></div>
+                        <div class="cell white"></div>
+                        <div class="cell black"></div>
+                        <div class="cell white"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- <mvc-button id="move-black">Make optimal black move</mvc-button>
+        <mvc-button id="move-white">Make optimal white move</mvc-button> -->
+
+        <!-- <mvc-button id="move-black" label="Make optimal black move"></mvc-button>
+        <mvc-button id="move-white" label="Make optimal white move"></mvc-button> -->
+
+        <div class="lower">
+            <div class="algorithm-settings">
+                <div class="mdc-select mdc-select--filled algo-select">
+                    <div
+                        class="mdc-select__anchor"
+                        role="button"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        aria-labelledby="demo-label demo-selected-text"
+                    >
+                        <span class="mdc-select__ripple"></span>
+                        <span id="demo-label" class="mdc-floating-label">Search algorithm</span>
+                        <span class="mdc-select__selected-text-container">
+                            <span id="demo-selected-text" class="mdc-select__selected-text"
+                                >Alpha-Beta Pruning</span
+                            >
+                        </span>
+                        <span class="mdc-select__dropdown-icon">
+                            <svg
+                                class="mdc-select__dropdown-icon-graphic"
+                                viewBox="7 10 10 5"
+                                focusable="false"
+                            >
+                                <polygon
+                                    class="mdc-select__dropdown-icon-inactive"
+                                    stroke="none"
+                                    fill-rule="evenodd"
+                                    points="7 10 12 15 17 10"
+                                ></polygon>
+                                <polygon
+                                    class="mdc-select__dropdown-icon-active"
+                                    stroke="none"
+                                    fill-rule="evenodd"
+                                    points="7 15 12 10 17 15"
+                                ></polygon>
+                            </svg>
+                        </span>
+                        <span class="mdc-line-ripple"></span>
+                    </div>
+
+                    <div
+                        class="mdc-select__menu mdc-menu mdc-menu-surface mdc-menu-surface--fullwidth"
+                    >
+                        <ul class="mdc-list" role="listbox" aria-label="Food picker listbox">
+                            <li
+                                class="mdc-list-item mdc-list-item--selected"
+                                aria-selected="true"
+                                data-value="alphabeta"
+                                role="option"
+                            >
+                                <span class="mdc-list-item__ripple"></span>
+                                <span class="mdc-list-item__text">Alpha-Beta Pruning</span>
+                            </li>
+                            <li
+                                class="mdc-list-item"
+                                aria-selected="false"
+                                data-value="minimax"
+                                role="option"
+                            >
+                                <span class="mdc-list-item__ripple"></span>
+                                <span class="mdc-list-item__text"> Minimax </span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <label class="mdc-text-field mdc-text-field--filled">
+                    <span class="mdc-text-field__ripple"></span>
+                    <span class="mdc-floating-label" id="my-label-id">Search Depth</span>
+                    <input
+                        class="mdc-text-field__input"
+                        type="number"
+                        value="3"
+                        min="1"
+                        aria-labelledby="my-label-id"
+                    />
+                    <span class="mdc-line-ripple"></span>
+                </label>
+            </div>
+
+            <div id="mount-controls">
+                <div class="controls">
+                    <button id="move-white" class="foo-button mdc-button mdc-button--raised">
+                        <div class="mdc-button__ripple"></div>
+                        <span class="mdc-button__label">Make optimal white move</span>
+                    </button>
+                    <button id="move-black" class="foo-button mdc-button mdc-button--raised">
+                        <div class="mdc-button__ripple"></div>
+                        <span class="mdc-button__label">Make optimal black move</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <script src="/main.js"></script>
+        <!-- <script src="/swipl-wasm/swipl-web.js"></script> -->
+    </body>
+</html>

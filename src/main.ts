@@ -1,14 +1,36 @@
 import { render } from "lit-html"
-import { wrap } from "comlink";
-import { Player, Position, SwiplWorker } from "./common"
-import "./styles.sass"
+import { wrap } from "comlink"
+import { Player, Position, SearchAlgorithm, SwiplWorker } from "./common"
 import { Board } from "./board"
+// import "@material/mwc-button"/;
+import { MDCRipple } from "@material/ripple"
+import { MDCSelect } from "@material/select"
+import { MDCTextField } from "@material/textfield"
+import "./styles.sass"
+import { Controls } from "./controls"
+
+const ripple = new MDCRipple(document.querySelector(".mdc-button")!)
+
+const algorithmSelect = new MDCSelect(document.querySelector(".mdc-select")!)
+
+const searchDepthField = new MDCTextField(document.querySelector(".mdc-text-field")!)
+
+algorithmSelect.listen("MDCSelect:change", () => {
+    console.log(
+        `Selected option at index ${algorithmSelect.selectedIndex} with value "${algorithmSelect.value}"`
+    )
+})
 
 const mountPoint = document.getElementById("mount") as HTMLDivElement
-const whiteMoveButton = document.getElementById("move-white") as HTMLButtonElement
-const blackMoveButton = document.getElementById("move-black") as HTMLButtonElement
+const controlsMountPoint = document.getElementById("mount-controls") as HTMLDivElement
 
-const worker = wrap<SwiplWorker>(new Worker("./worker.js", { name: "swipl-runtime", type: "classic" }))
+// if ('serviceWorker' in navigator) {
+//     navigator.serviceWorker.register("/sw.js")
+// }
+
+const worker = wrap<SwiplWorker>(
+    new Worker("./worker.js", { name: "swipl-runtime", type: "classic" })
+)
 worker.ready.then(async () => {
     console.log("Ready, but on main thread")
 
@@ -45,11 +67,20 @@ worker.ready.then(async () => {
     }
 
     const makeBestMove = async (forPlayer: Player) => {
-        const play = await worker.evaluateBestMove(board, forPlayer, "alphabeta", 5)
+        waiting[forPlayer] = true
+        renderControls()
+        const start = performance.now()
+
+        const play = await worker.evaluateBestMove(board, forPlayer, algorithm, searchDepth)
+
+        took[forPlayer] = performance.now() - start
         if (!play) return alert(`No plays for ${forPlayer}`)
         const [{ nextBoard }, score] = play
         console.log("score", score)
         gameBoard = await worker.swapBoards(board, nextBoard)
+
+        waiting[forPlayer] = false
+        renderControls()
 
         render(
             Board({
@@ -61,17 +92,48 @@ worker.ready.then(async () => {
         )
     }
 
+    const renderControls = () => {
+        render(
+            Controls({
+                whiteWaiting: waiting.white,
+                blackWaiting: waiting.black,
+                tookWhite: took.white,
+                tookBlack: took.black,
+                onWhiteClick,
+                onBlackClick,
+            }),
+            controlsMountPoint
+        )
+    }
+
     const board = await worker.initializeBoard()
     let gameBoard = await worker.retrieveBoard(board)
     let currentMoves = await worker.availableMoves(board, "white")
+    let algorithm = algorithmSelect.value as SearchAlgorithm
+    let searchDepth = parseInt(searchDepthField.value)
+    const took: { [K in Player]?: number } = {}
+    const waiting: { [K in Player]: boolean } = {
+        white: false,
+        black: false
+    }
 
-    whiteMoveButton.addEventListener("click", () => {
-        makeBestMove("white")
+    if (Number.isNaN(searchDepth))
+        throw new Error("Invalid value in the search depth field. Expected positive integer")
+
+    const onWhiteClick = () => makeBestMove("white")
+    const onBlackClick = () => makeBestMove("black")
+
+    algorithmSelect.listen("MDCSelect:change", () => {
+        algorithm = algorithmSelect.value as SearchAlgorithm
     })
 
-    blackMoveButton.addEventListener("click", () => {
-        makeBestMove("black")
+    searchDepthField.listen("input", ev => {
+        const value = parseInt(searchDepthField.value)
+        if (Number.isNaN(value)) return
+        searchDepth = value
     })
+
+    renderControls()
 
     render(
         Board({

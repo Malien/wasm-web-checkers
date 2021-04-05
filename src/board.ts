@@ -1,14 +1,25 @@
 import { html } from "lit-html"
-import { BoardRow, Cell, GameBoard, Move, Position } from "./common"
+import { BoardRow, Cell, GameBoard, Move, Player, Position } from "./common"
 
-const figureColor = {
-    b: "black",
-    bq: "black",
-    w: "white",
-    wq: "white",
-} as const
+const Figure = (color: Player) => html` <div class="figure ${color}"></div> `
 
-const Figure = (color: "black" | "white") => html` <div class="figure ${color}"></div> `
+const Queen = (color: Player) => html`
+    <div class="figure ${color}">
+        <div class="crown ${color}"></div>
+    </div>
+`
+
+interface SquareProps {
+    color: "white" | "black"
+    onClick?: () => void
+    children?: unknown
+    selection?: "origin" | "move"
+}
+
+const Square = ({ color, onClick, children, selection }: SquareProps) => {
+    const selectionClass = selection ? `selection-${selection}` : ""
+    return html`<div class="cell ${color} ${selectionClass}" @click=${onClick}>${children}</div>`
+}
 
 interface CellProps {
     cell: Cell
@@ -17,21 +28,19 @@ interface CellProps {
 }
 
 const Cell = ({ cell, onClick, selection }: CellProps) => {
-    const selectionClass = selection ? `selection-${selection}` : ""
     switch (cell) {
         case "0":
-            return html`<div class="cell white"></div>`
-        case "b":
+            return Square({ color: "white" })
         case "bq":
-        case "w":
+            return Square({ color: "black", onClick, selection, children: Queen("black") })
         case "wq":
-            return html`
-                <div class="cell black ${selectionClass}" @click=${onClick}>
-                    ${Figure(figureColor[cell])}
-                </div>
-            `
+            return Square({ color: "black", onClick, selection, children: Queen("white") })
+        case "b":
+            return Square({ color: "black", onClick, selection, children: Figure("black") })
+        case "w":
+            return Square({ color: "black", onClick, selection, children: Figure("white") })
         case "1":
-            return html`<div class="cell black ${selectionClass}" @click=${onClick}></div>`
+            return Square({ color: "black", selection, onClick })
     }
 }
 

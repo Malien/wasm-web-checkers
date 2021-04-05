@@ -40,7 +40,7 @@ export type SwiplWorker = CoverPromises<{
     availableMoves(boardTerm: TermRef, player: Player): PLMove[]
     movesFor(boardTerm: TermRef, position: Position): PLMove[]
     swapBoards(into: TermRef, from: TermRef): GameBoard
-    evaluateBestMove(boardTerm: TermRef, forPlayer: Player, using: SearchAlgorithm, searchDepth: number): [move: PLMove, score: number]
+    evaluateBestMove(boardTerm: TermRef, forPlayer: Player, using: SearchAlgorithm, searchDepth: number): [move: PLMove, score: number] | undefined
 }>
 
 
