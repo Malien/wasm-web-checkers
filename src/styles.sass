@@ -64,15 +64,14 @@
     height: 80%
     margin: 10%
     border-radius: 50%
-    border: 5px solid
 
     &.black
+        border: 5px solid
         background-color: black
         border-color: white
     
     &.white
         background-color: white
-        border-color: black
 
 .crown
     width: 60%
@@ -117,3 +116,20 @@
     display: block
     font-family: Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif
     color: lightgray
+
+@media screen and ( max-width: 500px )
+    .controls 
+       grid-template-columns: auto
+       gap: 0
+
+    .algorithm-settings
+        grid-template-columns: auto
+
+    .foo-button
+        margin: 10px
+
+    .board
+        border: solid 10px brown
+
+    .figure.black
+        border-width: 3px
