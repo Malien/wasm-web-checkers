@@ -6,26 +6,29 @@ import { Board } from "./board"
 import { MDCRipple } from "@material/ripple"
 import { MDCSelect } from "@material/select"
 import { MDCTextField } from "@material/textfield"
+import { MDCSnackbar } from "@material/snackbar"
 import "./styles.sass"
 import { Controls } from "./controls"
 
 new MDCRipple(document.querySelector(".mdc-button")!)
 
 const algorithmSelect = new MDCSelect(document.querySelector(".mdc-select")!)
-
 const searchDepthField = new MDCTextField(document.querySelector(".mdc-text-field")!)
-
-algorithmSelect.listen("MDCSelect:change", () => {
-    console.log(
-        `Selected option at index ${algorithmSelect.selectedIndex} with value "${algorithmSelect.value}"`
-    )
-})
+const snackbar = new MDCSnackbar(document.querySelector(".mdc-snackbar")!)
 
 const mountPoint = document.getElementById("mount") as HTMLDivElement
 const controlsMountPoint = document.getElementById("mount-controls") as HTMLDivElement
 
-if ('serviceWorker' in navigator) {
+if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("/sw.js")
+    navigator.serviceWorker.ready.then(() => {
+        if (localStorage["installed"] !== "true") {
+            setTimeout(() => {
+                localStorage["installed"] = "true"
+                snackbar.open()
+            }, 2000)
+        }
+    })
 }
 
 const worker = wrap<SwiplWorker>(
@@ -44,14 +47,17 @@ worker.ready.then(async () => {
                 origin: position,
                 moves: currentMoves.map(({ to }) => to),
                 onMove: makeMove,
-                canEat
+                canEat,
             }),
             mountPoint
         )
     }
 
     const calculateCanEat = async (): Promise<Position[]> => {
-        const [canEatWhite, canEatBlack] = await Promise.all([worker.canEat(board, "white"), worker.canEat(board, "black")])
+        const [canEatWhite, canEatBlack] = await Promise.all([
+            worker.canEat(board, "white"),
+            worker.canEat(board, "black"),
+        ])
         return [...canEatWhite, ...canEatBlack].map(([x, y]) => [x - 1, y - 1])
     }
 
@@ -67,7 +73,7 @@ worker.ready.then(async () => {
                     board: gameBoard,
                     onClick: showMoves,
                     onMove: makeMove,
-                    canEat
+                    canEat,
                 }),
                 mountPoint
             )
@@ -96,7 +102,7 @@ worker.ready.then(async () => {
                 board: gameBoard,
                 onClick: showMoves,
                 onMove: makeMove,
-                canEat
+                canEat,
             }),
             mountPoint
         )
@@ -125,7 +131,7 @@ worker.ready.then(async () => {
     const took: { [K in Player]?: number } = {}
     const waiting: { [K in Player]: boolean } = {
         white: false,
-        black: false
+        black: false,
     }
 
     if (Number.isNaN(searchDepth))
