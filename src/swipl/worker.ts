@@ -1,14 +1,12 @@
 /// <reference lib="ES2020" />
 
 import { expose } from "comlink"
-import { SwiplWorker, PLMove, Cell, BoardRow, GameBoard, Position, Player } from "./common"
+import { SwiplWorker, PLMove, Cell, BoardRow, GameBoard, Position, Player } from "../common"
 import { loadSwiplInWorker, TermRef, TermType } from "./swipl"
 import { collectList, constructArgsArray, newTermRefs, bind as bindUtil } from "./util"
 import { bind as bindTypecheck } from "./typecheck"
 
-const PLPromise = loadSwiplInWorker("./swipl-wasm")
-
-const configured = PLPromise.then(async PL => {
+const configured = loadSwiplInWorker("./swipl-wasm").then(async PL => {
     console.log("INIT!")
 
     const predicates = {
@@ -191,7 +189,7 @@ const worker: SwiplWorker = {
         PL.putTerm(board, boardTerm)
         PL.putAtomChars(playerTerm, player)
         if (!callPredicate(predicates.canEat, board)) throw new Error("Couldn't evaluate can_eat/3")
-        return collectList(PL, positions, retrievePosition)
+        return collectList(PL, positions, retrievePosition).map(([x, y]) => [x - 1, y - 1])
     },
 
     async nextPlayer(player) {

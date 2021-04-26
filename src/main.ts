@@ -1,6 +1,5 @@
 import { render } from "lit-html"
-import { wrap } from "comlink"
-import { Player, PLMove, Position, SearchAlgorithm, SwiplWorker } from "./common"
+import { Move, Player, Position, SearchAlgorithm } from "./common"
 import { Board } from "./board"
 // import "@material/mwc-button"/;
 import { MDCRipple } from "@material/ripple"
@@ -9,6 +8,7 @@ import { MDCTextField } from "@material/textfield"
 import { MDCSnackbar } from "@material/snackbar"
 import "./styles.sass"
 import { Controls } from "./controls"
+import { JSGameLogic } from "./js/game"
 
 new MDCRipple(document.querySelector(".mdc-button")!)
 
@@ -19,30 +19,33 @@ const snackbar = new MDCSnackbar(document.querySelector(".mdc-snackbar")!)
 const mountPoint = document.getElementById("mount") as HTMLDivElement
 const controlsMountPoint = document.getElementById("mount-controls") as HTMLDivElement
 
-if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("/sw.js")
-    navigator.serviceWorker.ready.then(() => {
-        if (localStorage["installed"] !== "true") {
-            setTimeout(() => {
-                localStorage["installed"] = "true"
-                snackbar.open()
-            }, 2000)
-        }
-    })
-}
+// if ("serviceWorker" in navigator) {
+//     navigator.serviceWorker.register("/sw.js")
+//     navigator.serviceWorker.ready.then(() => {
+//         if (localStorage["installed"] !== "true") {
+//             setTimeout(() => {
+//                 localStorage["installed"] = "true"
+//                 snackbar.open()
+//             }, 2000)
+//         }
+//     })
+// }
 
-const worker = wrap<SwiplWorker>(
-    new Worker("./worker.js", { name: "swipl-runtime", type: "classic" })
-)
-worker.ready.then(async () => {
+const game = new JSGameLogic()
+
+// const worker = wrap<SwiplWorker>(
+//     new Worker("./swipl-worker.js", { name: "swipl-runtime", type: "classic" })
+// )
+// worker.ready.then(async () => {
+game.ready.then(async () => {
     console.log("Ready, but on main thread")
 
     const showMoves = async (position: Position) => {
-        currentMoves = await worker.movesFor(board, position)
+        currentMoves = await game.movesFor(board, position)
 
         render(
             Board({
-                board: gameBoard,
+                board,
                 onClick: showMoves,
                 origin: position,
                 moves: currentMoves.map(({ to }) => to),
@@ -55,22 +58,22 @@ worker.ready.then(async () => {
 
     const calculateCanEat = async (): Promise<Position[]> => {
         const [canEatWhite, canEatBlack] = await Promise.all([
-            worker.canEat(board, "white"),
-            worker.canEat(board, "black"),
+            game.canEat(board, "white"),
+            game.canEat(board, "black"),
         ])
-        return [...canEatWhite, ...canEatBlack].map(([x, y]) => [x - 1, y - 1])
+        return [...canEatWhite, ...canEatBlack].map(([x, y]) => [x, y])
     }
 
     const makeMove = async ([x, y]: Position) => {
         const move = currentMoves.find(({ to }) => to[0] == x && to[1] == y)
         currentMoves = []
         if (move) {
-            gameBoard = await worker.swapBoards(board, move.nextBoard)
+            board = await game.nextBoard(move)
             canEat = await calculateCanEat()
 
             render(
                 Board({
-                    board: gameBoard,
+                    board,
                     onClick: showMoves,
                     onMove: makeMove,
                     canEat,
@@ -85,13 +88,13 @@ worker.ready.then(async () => {
         renderControls()
         const start = performance.now()
 
-        const play = await worker.evaluateBestMove(board, forPlayer, algorithm, searchDepth)
+        const play = await game.evaluateBestMove(board, forPlayer, algorithm, searchDepth)
 
         took[forPlayer] = performance.now() - start
         if (!play) return alert(`No plays for ${forPlayer}`)
-        const [{ nextBoard }, score] = play
+        const [move, score] = play
         console.log("score", score)
-        gameBoard = await worker.swapBoards(board, nextBoard)
+        board = await game.nextBoard(move)
         canEat = await calculateCanEat()
 
         waiting[forPlayer] = false
@@ -99,7 +102,7 @@ worker.ready.then(async () => {
 
         render(
             Board({
-                board: gameBoard,
+                board,
                 onClick: showMoves,
                 onMove: makeMove,
                 canEat,
@@ -122,9 +125,9 @@ worker.ready.then(async () => {
         )
     }
 
-    const board = await worker.initializeBoard()
-    let gameBoard = await worker.retrieveBoard(board)
-    let currentMoves: PLMove[] = []
+    // let board = await game.testBoard(1)
+    let board = await game.initializeBoard()
+    let currentMoves: Move[] = []
     let algorithm = algorithmSelect.value as SearchAlgorithm
     let searchDepth = parseInt(searchDepthField.value)
     let canEat = await calculateCanEat()
@@ -154,12 +157,13 @@ worker.ready.then(async () => {
 
     render(
         Board({
-            board: gameBoard,
+            board,
             onClick: showMoves,
             onMove: makeMove,
             moves: currentMoves.map(({ to }) => to),
         }),
         mountPoint
     )
-    console.log(gameBoard)
+    console.log(board)
+
 })

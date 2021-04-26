@@ -8,6 +8,7 @@
         ]
     },
     "files": [
-        "src/worker.ts"
+        "src/swipl/worker.ts",
+        "src/js/worker.ts"
     ]
 }

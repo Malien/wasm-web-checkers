@@ -1,4 +1,4 @@
-import { NewType, unwrap, wrap } from "./newtype"
+import { NewType, unwrap, wrap, Tuple } from "../util"
 import {
     AtomPtr,
     CharBufferFlags,
@@ -33,43 +33,51 @@ export const loadProgramFile = async (PL: Prolog, response: Response | ArrayBuff
  * Retrieves atom name from term.
  * NOTE: call only if term is a atom
  */
-export const getAtomChars = (PL: Prolog, term: TermRef): string => withStack(() => {
-    const atomName = stackAlloc(4)
-    if (!PL.getAtomChars(term, atomName)) {
-        throw new Error("Could not get atom name")
-    }
-    return UTF8ToString(getI32Value(atomName))
-})
+export const getAtomChars = (PL: Prolog, term: TermRef): string =>
+    withStack(() => {
+        const atomName = stackAlloc(4)
+        if (!PL.getAtomChars(term, atomName)) {
+            throw new Error("Could not get atom name")
+        }
+        return UTF8ToString(getI32Value(atomName))
+    })
 
-export const getInteger = (PL: Prolog, term: TermRef): number => withStack(() => {
-    const intPtr = stackAlloc(4)
-    if (!PL.getInteger(term, intPtr)) {
-        throw new Error("Could not get term's integer value")
-    }
-    return getI32Value(intPtr)
-})
+export const getInteger = (PL: Prolog, term: TermRef): number =>
+    withStack(() => {
+        const intPtr = stackAlloc(4)
+        if (!PL.getInteger(term, intPtr)) {
+            throw new Error("Could not get term's integer value")
+        }
+        return getI32Value(intPtr)
+    })
 
-export const getFloat = (PL: Prolog, term: TermRef): number => withStack(() => {
-    const floatPtr = stackAlloc(8)
-    if (!PL.getFloat(term, floatPtr)) {
-        throw new Error("Could not get term's floating point value")
-    }
-    return getF64Value(floatPtr)
-})
+export const getFloat = (PL: Prolog, term: TermRef): number =>
+    withStack(() => {
+        const floatPtr = stackAlloc(8)
+        if (!PL.getFloat(term, floatPtr)) {
+            throw new Error("Could not get term's floating point value")
+        }
+        return getF64Value(floatPtr)
+    })
 
 export const getTermChars = (
     PL: Prolog,
     term: TermRef,
     flags: CharBufferFlags = PL.CVT_ALL
-): string => withStack(() => {
-    const stringPtr = stackAlloc(4)
-    if (
-        !PL.getChars(term, stringPtr, flags | PL.BUF_DISCARDABLE | PL.REP_UTF8 | PL.CVT_EXCEPTION)
-    ) {
-        throw new Error("Could not read term string characters")
-    }
-    return UTF8ToString(getI32Value(stringPtr))
-})
+): string =>
+    withStack(() => {
+        const stringPtr = stackAlloc(4)
+        if (
+            !PL.getChars(
+                term,
+                stringPtr,
+                flags | PL.BUF_DISCARDABLE | PL.REP_UTF8 | PL.CVT_EXCEPTION
+            )
+        ) {
+            throw new Error("Could not read term string characters")
+        }
+        return UTF8ToString(getI32Value(stringPtr))
+    })
 
 export const advancePtr = <P extends NewType<Ptr, any>>(ptr: P, by: number): P =>
     wrap(unwrap(ptr) + 4 * by)
@@ -99,8 +107,17 @@ export const withStack = <R>(block: () => R): R => {
 /**
  * @note Term should be of type TERM or FUNCTOR
  */
-export function constructArgsArray<R>(PL: Prolog, term: TermRef, transform: (arg: TermRef) => R): R[]
-export function constructArgsArray<R, N extends number>(PL: Prolog, term: TermRef, transform: (arg: TermRef) => R, arity: N): Tuple<R, N>
+export function constructArgsArray<R>(
+    PL: Prolog,
+    term: TermRef,
+    transform: (arg: TermRef) => R
+): R[]
+export function constructArgsArray<R, N extends number>(
+    PL: Prolog,
+    term: TermRef,
+    transform: (arg: TermRef) => R,
+    arity: N
+): Tuple<R, N>
 export function constructArgsArray<R>(
     PL: Prolog,
     term: TermRef,
@@ -123,15 +140,6 @@ export function constructArgsArray<R>(
     return arr
 }
 
-type Tuple<T, N extends number> = N extends N
-    ? number extends N
-        ? T[]
-        : _TupleOf<T, N, []>
-    : never
-type _TupleOf<T, N extends number, R extends unknown[]> = R["length"] extends N
-    ? R
-    : _TupleOf<T, N, [T, ...R]>
-
 export const newTermRefs = <N extends number>(PL: Prolog, amount: N): Tuple<TermRef, N> => {
     const terms = PL.newTermRefs(amount)
     return [...Array(amount).keys()].map(i => wrap(unwrap(terms) + i)) as Tuple<TermRef, N>
@@ -140,7 +148,11 @@ export const newTermRefs = <N extends number>(PL: Prolog, amount: N): Tuple<Term
 export const openQuery = (PL: Prolog, predicate: PredicatePtr, terms: TermRef) =>
     PL.openQuery(wrap(0), PL.Q_NORMAL, predicate, terms)
 
-export const collectList = <R>(PL: Prolog, term: TermRef, transform: (element: TermRef) => R): R[] => {
+export const collectList = <R>(
+    PL: Prolog,
+    term: TermRef,
+    transform: (element: TermRef) => R
+): R[] => {
     const head = PL.newTermRef()
     const tail = PL.copyTermRef(term)
     const arr: R[] = []
@@ -177,7 +189,7 @@ export const bind = bindPrologFunctions({
     openQuery,
     getInteger,
     getFloat,
-    collectList
+    collectList,
 })
 
 export default { bind }

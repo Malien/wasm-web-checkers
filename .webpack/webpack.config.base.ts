@@ -1,16 +1,13 @@
 import path from "path"
-// import HtmlWebpackPlugin from "html-webpack-plugin";
 import CopyPlugin from "copy-webpack-plugin"
 import autoprefixer from "autoprefixer"
-import OptimizeCSSAssetsPlugin from "optimize-css-assets-webpack-plugin";
-import TerserPlugin from "terser-webpack-plugin";
 
-module.exports = {
-    mode: "production",
+export default {
     devtool: "source-map",
     entry: {
         main: "./src/main.ts",
-        worker: "./src/worker.ts",
+        "swipl-worker": "./src/swipl/worker.ts",
+        "js-worker": "./src/js/worker.ts",
         sw: "./src/sw.ts",
         styles: "./src/styles.sass",
     },
@@ -19,7 +16,7 @@ module.exports = {
     },
     output: {
         filename: "[name].js",
-        path: path.resolve(__dirname, "dist"),
+        path: path.resolve(process.cwd(), "dist"),
     },
     module: {
         rules: [
@@ -52,13 +49,13 @@ module.exports = {
                     {
                         loader: "sass-loader",
                         options: {
-                            implementation: require('sass'),
+                            implementation: require("sass"),
 
                             webpackImporter: false,
                             sassOptions: {
                                 includePaths: ["./node_modules"],
                             },
-                        }
+                        },
                     },
                 ],
             },
@@ -75,31 +72,11 @@ module.exports = {
                 "public/icon@2x.png",
                 "public/icon@3x.png",
                 "public/icon@4x.png",
-                "src/main.pl",
+                "src/swipl/main.pl",
                 // { from: "public/*", to: ".", flatten: true },
                 // { from: "src/main.pl", to: "." },
                 { from: "swipl-wasm/dist", to: "swipl-wasm" },
             ],
         }),
     ],
-    optimization: {
-        minimizer: [
-            new OptimizeCSSAssetsPlugin({
-                cssProcessorOptions: {
-                map: {
-                  inline: false,
-                  annotation: true,
-                },
-              },
-            }),
-            new TerserPlugin({
-                // Use multi-process parallel running to improve the build speed
-                // Default number of concurrent runs: os.cpus().length - 1
-                parallel: true,
-                terserOptions: {
-                    sourceMap: true
-                },
-              }),
-        ]
-    }
 }

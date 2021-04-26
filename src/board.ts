@@ -1,5 +1,5 @@
 import { html } from "lit-html"
-import { BoardRow, Cell, GameBoard, Move, Player, Position } from "./common"
+import { Cell, GameBoard, Player, Position } from "./common"
 
 const Figure = (color: Player) => html` <div class="figure ${color}"></div> `
 
