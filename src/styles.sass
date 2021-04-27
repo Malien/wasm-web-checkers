@@ -17,7 +17,7 @@
 
 .board-container 
     position: relative
-    max-width: min(1200px, calc(100vh - 180px))
+    max-width: min(1200px, calc(100vh - 200px))
     margin: auto
     width: 100%
     &::after 
@@ -117,6 +117,11 @@
     display: block
     font-family: Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif
     color: lightgray
+
+    &.left
+        grid-column: 1
+    &.right
+        grid-column: 2
 
 @media screen and ( max-width: 500px )
     .controls 

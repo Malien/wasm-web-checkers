@@ -9,6 +9,8 @@ import {
     Piece,
     JSMove,
     ValidPosition,
+    BoardRow,
+    SearchAlgorithm,
 } from "../common"
 
 const boundCheck = (pos: Position): pos is ValidPosition => {
@@ -36,14 +38,14 @@ const replace = (board: GameBoard, pos: Position, cell: Cell) => {
     } else throw boundsException(pos)
 }
 
-function promote(y: 8, piece: "b"): "bq"
+function promote(y: 7, piece: "b"): "bq"
 function promote(y: number, piece: "b"): "b" | "bq"
-function promote(y: 1, piece: "w"): "wq"
+function promote(y: 0, piece: "w"): "wq"
 function promote(y: number, piece: "w"): "w" | "wq"
 function promote<C extends Cell>(y: number, piece: C): C
 function promote(y: number, piece: Cell) {
-    if (piece === "b" && y === 8) return "bq"
-    if (piece === "w" && y === 1) return "wq"
+    if (piece === "b" && y === 7) return "bq"
+    if (piece === "w" && y === 0) return "wq"
     return piece
 }
 
@@ -192,7 +194,7 @@ function* chainEatMoves(board: GameBoard, position: Position, piece: Piece): Gen
 
 const canPlayerMakeEatMove = (board: GameBoard, player: Player) => {
     for (const { position, piece } of playerPositions(board, player)) {
-        if(existsEatMove(board, position, piece)) return true
+        if (existsEatMove(board, position, piece)) return true
     }
     return false
 }
@@ -204,36 +206,150 @@ const existsEatMove = (board: GameBoard, position: Position, piece: Piece) => {
     return false
 }
 
-const workerInterface: JSWorkerInterface = {
-    movesFor(board, position) {
-        const cell = elementAt(board, position)
-        if (cell === "0" || cell === "1") return []
-        const player = playerAffiliation(cell)
-        if (canPlayerMakeEatMove(board, player)) {
-            return [...chainEatMoves(board, position, cell)]
-        }
-        return [...validMoves(moveHandlers, board, position, cell)]
-    },
-    availableMoves(board, player) {
-        const eatMoves: JSMove[] = []
-        const moves: JSMove[] = []
-        for (const { position, piece } of playerPositions(board, player)) {
-            eatMoves.push(...chainEatMoves(board, position, piece))
+const nextPlayer: Record<Player, Player> = {
+    black: "white",
+    white: "black",
+}
 
-            if (eatMoves.length === 0) {
-                moves.push(...validMoves(moveHandlers, board, position, piece))
+const pieceValueMap: Record<Cell, number> = {
+    0: 0,
+    1: 0,
+    w: 1,
+    b: -1,
+    wq: 5,
+    bq: -5,
+}
+
+const pieceValue = (cell: Cell) => pieceValueMap[cell]
+
+const hasMoves = (board: GameBoard, player: Player) => {
+    for (const { position, piece } of playerPositions(board, player)) {
+        for (const _ of validMoves(moveHandlers, board, position, piece)) {
+            return true
+        }
+        for (const _ of validMoves(eatHandlers, board, position, piece)) {
+            return true
+        }
+    }
+    return false
+}
+
+const evaluateBoard = (board: GameBoard) => {
+    if (!hasMoves(board, "white")) return -200
+    if (!hasMoves(board, "black")) return 200
+    return board.flat().map(pieceValue).reduce(add, 0)
+}
+
+function isMinimizingPlayer(player: "black"): true
+function isMinimizingPlayer(player: "white"): false
+function isMinimizingPlayer(player: Player): player is "black"
+function isMinimizingPlayer(player: Player): player is "black" {
+    return player === "black"
+}
+
+function minimax<N extends number>(
+    board: GameBoard,
+    player: Player,
+    depth: N,
+    maxDepth: N
+): [move: null, score: number] | undefined
+function minimax(
+    board: GameBoard,
+    player: Player,
+    depth: number,
+    maxDepth: number
+): [move: JSMove | null, score: number] | undefined
+function minimax(board: GameBoard, player: Player, depth: number, maxDepth: number) {
+    if (depth >= maxDepth) {
+        return [null, evaluateBoard(board)] as const
+    }
+
+    const moves = availableMoves(board, player)
+    if (isMinimizingPlayer(player)) {
+        return minimizeMoves(moves, nextPlayer[player], depth + 1, maxDepth)
+    } else {
+        return maximizeMoves(moves, nextPlayer[player], depth + 1, maxDepth)
+    }
+}
+
+const bestMove = (init: number, cmp: (a: number, b: number) => boolean) => (
+    moves: Iterable<JSMove>,
+    player: Player,
+    depth: number,
+    maxDepth: number
+): EvaluationResult | undefined => {
+    let score = init
+    let move: JSMove | undefined
+    for (const currentMove of moves) {
+        const res = minimax(currentMove.nextBoard, player, depth, maxDepth)
+        const currentScore = res ? res[1] : evaluateBoard(currentMove.nextBoard)
+        if (cmp(currentScore, score)) {
+            score = currentScore
+            move = currentMove
+        }
+    }
+    return move && [move, score]
+}
+
+const less = (a: number, b: number) => a < b
+const greater = (a: number, b: number) => a > b
+
+const minimizeMoves = bestMove(Number.POSITIVE_INFINITY, less)
+const maximizeMoves = bestMove(Number.NEGATIVE_INFINITY, greater)
+
+function* availableMoves(board: GameBoard, player: Player) {
+    let hadEats = false
+    for (const { position, piece } of playerPositions(board, player)) {
+        for (const move of chainEatMoves(board, position, piece)) {
+            hadEats = true
+            yield move
+        }
+    }
+    if (!hadEats) {
+        for (const { position, piece } of playerPositions(board, player)) {
+            for (const move of validMoves(moveHandlers, board, position, piece)) {
+                yield move
             }
         }
-        if (eatMoves.length !== 0) return eatMoves
-        return moves
+    }
+}
+
+const movesFor = (board: GameBoard, position: Position) => {
+    const cell = elementAt(board, position)
+    if (cell === "0" || cell === "1") return []
+    const player = playerAffiliation(cell)
+    if (canPlayerMakeEatMove(board, player)) {
+        return [...chainEatMoves(board, position, cell)]
+    }
+    return [...validMoves(moveHandlers, board, position, cell)]
+}
+
+const canEat = (board: GameBoard, player: Player) =>
+    [...playerPositions(board, player)]
+        .filter(({ position, piece }) => existsEatMove(board, position, piece))
+        .map(v => v.position)
+
+type EvaluationResult = [move: JSMove, score: number]
+
+const evaluateBestMove = (
+    board: GameBoard,
+    player: Player,
+    algorithm: SearchAlgorithm,
+    searchDepth: number
+): EvaluationResult | undefined => {
+    if (algorithm === "minimax") {
+        return minimax(board, player, 0, searchDepth) as EvaluationResult | undefined
+    }
+    throw new Error("Not implemented")
+}
+
+const workerInterface: JSWorkerInterface = {
+    movesFor,
+    availableMoves(board, player) {
+        return [...availableMoves(board, player)]
     },
-    canEat: (board, player) =>
-        [...playerPositions(board, player)]
-            .filter(({ position, piece }) => existsEatMove(board, position, piece))
-            .map(v => v.position),
-    evaluateBestMove(board, player, algorithm, searchDepth) {
-        throw new Error("Not implemented")
-    },
+    canEat,
+    evaluateBestMove,
 }
 
 expose(workerInterface)

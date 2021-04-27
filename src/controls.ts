@@ -28,8 +28,8 @@ export const Controls = ({
             disabled: blackWaiting,
             onClick: onBlackClick,
         })}
-        ${tookWhite && html`<span class="took-measure">Took ${tookWhite}ms</span>`}
-        ${tookBlack && html`<span class="took-measure">Took ${tookBlack}ms</span>`}
+        ${tookWhite && html`<span class="took-measure left">Took ${tookWhite}ms</span>`}
+        ${tookBlack && html`<span class="took-measure right">Took ${tookBlack}ms</span>`}
     </div>
 `
 
