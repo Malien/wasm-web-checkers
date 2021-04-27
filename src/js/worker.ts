@@ -247,41 +247,38 @@ function isMinimizingPlayer(player: Player): player is "black" {
     return player === "black"
 }
 
-function minimax<N extends number>(
+function minimax(
     board: GameBoard,
     player: Player,
-    depth: N,
-    maxDepth: N
+    depth: 0
 ): [move: null, score: number] | undefined
 function minimax(
     board: GameBoard,
     player: Player,
-    depth: number,
-    maxDepth: number
+    depth: number
 ): [move: JSMove | null, score: number] | undefined
-function minimax(board: GameBoard, player: Player, depth: number, maxDepth: number) {
-    if (depth >= maxDepth) {
+function minimax(board: GameBoard, player: Player, depth: number) {
+    if (depth == 0) {
         return [null, evaluateBoard(board)] as const
     }
 
     const moves = availableMoves(board, player)
     if (isMinimizingPlayer(player)) {
-        return minimizeMoves(moves, nextPlayer[player], depth + 1, maxDepth)
+        return minimizeMoves(moves, nextPlayer[player], depth - 1)
     } else {
-        return maximizeMoves(moves, nextPlayer[player], depth + 1, maxDepth)
+        return maximizeMoves(moves, nextPlayer[player], depth - 1)
     }
 }
 
 const bestMove = (init: number, cmp: (a: number, b: number) => boolean) => (
     moves: Iterable<JSMove>,
     player: Player,
-    depth: number,
-    maxDepth: number
+    depth: number
 ): EvaluationResult | undefined => {
     let score = init
     let move: JSMove | undefined
     for (const currentMove of moves) {
-        const res = minimax(currentMove.nextBoard, player, depth, maxDepth)
+        const res = minimax(currentMove.nextBoard, player, depth)
         const currentScore = res ? res[1] : evaluateBoard(currentMove.nextBoard)
         if (cmp(currentScore, score)) {
             score = currentScore
@@ -296,6 +293,49 @@ const greater = (a: number, b: number) => a > b
 
 const minimizeMoves = bestMove(Number.POSITIVE_INFINITY, less)
 const maximizeMoves = bestMove(Number.NEGATIVE_INFINITY, greater)
+
+const alphabeta = (
+    board: GameBoard,
+    player: Player,
+    alpha: number,
+    beta: number,
+    depth: number
+) => {
+    if (depth == 0) {
+        return [null, evaluateBoard(board)] as const
+    }
+
+    const moves = availableMoves(board, player)
+    if (isMinimizingPlayer(player)) {
+        let score = Number.POSITIVE_INFINITY
+        let move: JSMove | undefined
+        for (const currentMove of moves) {
+            const res = alphabeta(currentMove.nextBoard, nextPlayer[player], alpha, beta, depth - 1)
+            const currentScore = res ? res[1] : evaluateBoard(currentMove.nextBoard)
+            if (currentScore < score) {
+                score = currentScore
+                move = currentMove
+                beta = Math.min(beta, score)
+            }
+            if (beta <= alpha) break
+        }
+        return move && ([move, score] as const)
+    } else {
+        let score = Number.NEGATIVE_INFINITY
+        let move: JSMove | undefined
+        for (const currentMove of moves) {
+            const res = alphabeta(currentMove.nextBoard, nextPlayer[player], alpha, beta, depth - 1)
+            const currentScore = res ? res[1] : evaluateBoard(currentMove.nextBoard)
+            if (currentScore > score) {
+                score = currentScore
+                move = currentMove
+                alpha = Math.max(alpha, score)
+            }
+            if (alpha >= beta) break
+        }
+        return move && ([move, score] as const)
+    }
+}
 
 function* availableMoves(board: GameBoard, player: Player) {
     let hadEats = false
@@ -338,7 +378,15 @@ const evaluateBestMove = (
     searchDepth: number
 ): EvaluationResult | undefined => {
     if (algorithm === "minimax") {
-        return minimax(board, player, 0, searchDepth) as EvaluationResult | undefined
+        return minimax(board, player, searchDepth) as EvaluationResult | undefined
+    } else if (algorithm === "alphabeta") {
+        return alphabeta(
+            board,
+            player,
+            Number.NEGATIVE_INFINITY,
+            Number.POSITIVE_INFINITY,
+            searchDepth
+        ) as EvaluationResult | undefined
     }
     throw new Error("Not implemented")
 }
