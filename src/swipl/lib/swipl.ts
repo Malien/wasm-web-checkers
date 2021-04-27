@@ -1,4 +1,4 @@
-import { NewType, wrap } from "../util/newtype"
+import { NewType, wrap } from "../../util/newtype"
 
 const filterNumericKeys = <T>(obj: T): Omit<T, number> =>
     Object.fromEntries(

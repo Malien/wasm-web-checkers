@@ -1,17 +1,15 @@
 import { expose } from "comlink"
 import { allocateArray } from "../util"
-import {
+import type {
     Cell,
     GameBoard,
-    JSWorkerInterface,
     Position,
     Player,
     Piece,
-    JSMove,
     ValidPosition,
-    BoardRow,
     SearchAlgorithm,
 } from "../common"
+import type { JSWorkerInterface, JSMove } from "./js"
 
 const boundCheck = (pos: Position): pos is ValidPosition => {
     const [x, y] = pos
@@ -393,11 +391,11 @@ const evaluateBestMove = (
 
 const workerInterface: JSWorkerInterface = {
     movesFor,
+    canEat,
+    evaluateBestMove,
     availableMoves(board, player) {
         return [...availableMoves(board, player)]
     },
-    canEat,
-    evaluateBestMove,
 }
 
 expose(workerInterface)

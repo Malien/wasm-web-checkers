@@ -1,4 +1,4 @@
-import { NewType, unwrap, wrap, Tuple } from "../util"
+import { NewType, unwrap, wrap, Tuple } from "../../util"
 import {
     AtomPtr,
     CharBufferFlags,

@@ -1,14 +1,7 @@
 import * as comlink from "comlink"
 import { allocateArray, Tuple } from "../util"
-import {
-    BoardRow,
-    Cell,
-    GameBoard,
-    GameLogicModule,
-    JSMove,
-    JSWorkerProxy,
-    Move,
-} from "../common"
+import type { BoardRow, Cell, GameBoard, GameLogicModule, Move } from "../common"
+import type { JSWorkerProxy, JSMove } from "./js"
 
 export const testBoards: Tuple<GameBoard, 6> = [
     [
@@ -109,11 +102,9 @@ export class JSGameLogic implements GameLogicModule {
         return move
     }
 
-    testBoard: GameLogicModule["testBoard"] = idx =>
-        Promise.resolve(testBoards[idx - 1]!)
+    testBoard: GameLogicModule["testBoard"] = idx => Promise.resolve(testBoards[idx - 1]!)
 
-    initializeBoard: GameLogicModule["initializeBoard"] = () =>
-        Promise.resolve(initializedBoard)
+    initializeBoard: GameLogicModule["initializeBoard"] = () => Promise.resolve(initializedBoard)
 
     movesFor: GameLogicModule["movesFor"] = (board, position) =>
         this.worker.movesFor(board, position).then(this.simplifyMoves)
@@ -141,6 +132,6 @@ export class JSGameLogic implements GameLogicModule {
             )
         return Promise.resolve(board)
     }
-    
+
     encodeBoard: GameLogicModule["encodeBoard"] = Promise.resolve
 }

@@ -9,6 +9,7 @@ import { MDCSnackbar } from "@material/snackbar"
 import "./styles.sass"
 import { Controls } from "./controls"
 import { JSGameLogic } from "./js/game"
+import { SWIPLGameLogic } from "./swipl/game"
 
 new MDCRipple(document.querySelector(".mdc-button")!)
 
@@ -31,12 +32,9 @@ const controlsMountPoint = document.getElementById("mount-controls") as HTMLDivE
 //     })
 // }
 
-const game = new JSGameLogic()
+// const game = new JSGameLogic()
+const game = new SWIPLGameLogic()
 
-// const worker = wrap<SwiplWorker>(
-//     new Worker("./swipl-worker.js", { name: "swipl-runtime", type: "classic" })
-// )
-// worker.ready.then(async () => {
 game.ready.then(async () => {
     console.log("Ready, but on main thread")
 

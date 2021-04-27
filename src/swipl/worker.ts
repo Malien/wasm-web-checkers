@@ -1,10 +1,11 @@
 /// <reference lib="ES2020" />
 
 import { expose } from "comlink"
-import { SwiplWorker, PLMove, Cell, BoardRow, GameBoard, Position, Player } from "../common"
-import { loadSwiplInWorker, TermRef, TermType } from "./swipl"
-import { collectList, constructArgsArray, newTermRefs, bind as bindUtil } from "./util"
-import { bind as bindTypecheck } from "./typecheck"
+import type { Cell, BoardRow, GameBoard, Position, Player } from "../common"
+import type { PLMove, SwiplWorker } from "./swipl"
+import { loadSwiplInWorker, TermRef, TermType } from "./lib/swipl"
+import { collectList, constructArgsArray, newTermRefs, bind as bindUtil } from "./lib/util"
+import { bind as bindTypecheck } from "./lib/typecheck"
 
 const configured = loadSwiplInWorker("./swipl-wasm").then(async PL => {
     console.log("INIT!")
