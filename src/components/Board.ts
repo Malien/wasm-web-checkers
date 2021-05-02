@@ -1,7 +1,8 @@
-import { css, html, LitElement } from "lit"
-import { customElement, property } from "lit/decorators.js"
-import { GameBoard, Position } from "../common"
+import { css, html, LitElement, property, customElement } from "lit-element"
+import { GameBoard, Position, Selection } from "../common"
+import { ifDefined } from "../util/directives"
 import BoardCell from "./BoardCell"
+import "./BoardCell"
 
 export class SelectCheckersEvent extends Event {
     constructor(public position: Position) {
@@ -20,7 +21,7 @@ export default class Board extends LitElement {
     static styles = css`
         .board-container {
             position: relative;
-            max-width: min(1200px, calc(100vh - 200px));
+            max-width: min(1200px, calc(100vh - 220px));
             margin: auto;
             width: 100%;
             box-sizing: border-box;
@@ -44,6 +45,12 @@ export default class Board extends LitElement {
             justify-content: center;
             border: solid 20px brown;
             box-sizing: border-box;
+        }
+
+        @media screen and (max-width: 600px) {
+            .board {
+                border-width: 10px
+            }
         }
     `
 
@@ -80,34 +87,20 @@ export default class Board extends LitElement {
                 <div class="board" @click=${this.handleClick}>
                     ${board.flat().map((cell, index) => {
                         const position: Position = [index % 8, (index / 8) | 0]
-                        // const isMove = moves.some(move => cmpPositions(move, position))
                         const isEat = canEat.some(move => cmpPositions(move, position))
                         let selection: Selection | undefined
-                        // let clickHandler: ((position: Position, cell: Cell) => void) | undefined
                         if (isEat) {
                             selection = "eat"
                         }
                         if (origin && origin[0] == position[0] && origin[1] == position[1]) {
                             selection = "origin"
                         }
-                        // if (isMove) {
-                        //     selection = "move"
-                        //     clickHandler = onMove
-                        // } else {
-                        //     clickHandler = onClick
-                        //  }
 
                         return html`<checkers-cell
                             data-position=${position}
                             cell=${cell}
-                            selection=${selection}
+                            selection=${ifDefined(selection)}
                         ></checkers-cell>`
-
-                        // return Cell({
-                        //     cell,
-                        //     selection,
-                        //     onClick: () => clickHandler?.(position, cell),
-                        // })
                     })}
                 </div>
             </div>

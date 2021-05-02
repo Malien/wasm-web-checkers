@@ -1,5 +1,4 @@
-import { LitElement, css, html } from "lit"
-import { customElement, property } from "lit/decorators.js"
+import { LitElement, css, html, customElement, property } from "lit-element"
 import { Player, Selection } from "src/common"
 
 @customElement("checkers-square")

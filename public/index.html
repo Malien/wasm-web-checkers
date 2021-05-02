@@ -5,191 +5,41 @@
         <link rel="manifest" href="manifest.json" />
         <link rel="stylesheet" href="styles.css" />
         <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css?family=Material+Icons&display=block" rel="stylesheet">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="theme-color" content="#ebebeb">
         <link rel="apple-touch-icon" href="icon@1.5x.png">
         <link rel="icon" type="image/png" href="icon@1.5x.png"></link>
-        <link
-            href="https://fonts.googleapis.com/css?family=Material+Icons&display=block"
-            rel="stylesheet"
-        />
         <title>Prolog Web Checkers</title>
     </head>
     <body>
-        <div id="mount">
-            <checkers-board id="board" board='[
-                ["0", "1", "0", "1", "0", "1", "0", "1"],
-                ["1", "0", "1", "0", "1", "0", "1", "0"],
-                ["0", "1", "0", "1", "0", "1", "0", "1"],
-                ["1", "0", "1", "0", "1", "0", "1", "0"],
-                ["0", "1", "0", "1", "0", "1", "0", "1"],
-                ["1", "0", "1", "0", "1", "0", "1", "0"],
-                ["0", "1", "0", "1", "0", "1", "0", "1"],
-                ["1", "0", "1", "0", "1", "0", "1", "0"]
-            ]'></checkers-board>
-            <script>
-                board.addEventListener("checkers-select", console.log)
-                board.addEventListener("checkers-move", console.log)
-            </script>
-        </div>
+        <checkers-board origin='[1,2]' board='[
+            ["0", "1", "0", "1", "0", "1", "0", "1"],
+            ["1", "0", "1", "0", "1", "0", "1", "0"],
+            ["0", "1", "0", "1", "0", "1", "0", "1"],
+            ["1", "0", "1", "0", "1", "0", "1", "0"],
+            ["0", "1", "0", "1", "0", "1", "0", "1"],
+            ["1", "0", "1", "0", "1", "0", "1", "0"],
+            ["0", "1", "0", "1", "0", "1", "0", "1"],
+            ["1", "0", "1", "0", "1", "0", "1", "0"]
+        ]'></checkers-board>
 
         <div class="lower">
             <div class="algorithm-settings">
-                <div class="mdc-select mdc-select--filled mdc-select--disabled backend-select">
-                    <div
-                        class="mdc-select__anchor"
-                        role="button"
-                        aria-haspopup="listbox"
-                        aria-expanded="false"
-                        aria-labelledby="demo-label demo-selected-text"
-                    >
-                        <span class="mdc-select__ripple"></span>
-                        <span id="demo-label" class="mdc-floating-label">Backend</span>
-                        <span class="mdc-select__selected-text-container">
-                            <span id="demo-selected-text" class="mdc-select__selected-text"
-                                >JS</span
-                            >
-                        </span>
-                        <span class="mdc-select__dropdown-icon">
-                            <svg
-                                class="mdc-select__dropdown-icon-graphic"
-                                viewBox="7 10 10 5"
-                                focusable="false"
-                            >
-                                <polygon
-                                    class="mdc-select__dropdown-icon-inactive"
-                                    stroke="none"
-                                    fill-rule="evenodd"
-                                    points="7 10 12 15 17 10"
-                                ></polygon>
-                                <polygon
-                                    class="mdc-select__dropdown-icon-active"
-                                    stroke="none"
-                                    fill-rule="evenodd"
-                                    points="7 15 12 10 17 15"
-                                ></polygon>
-                            </svg>
-                        </span>
-                        <span class="mdc-line-ripple"></span>
-                    </div>
+                <mwc-select filled class="backend-select" label="Backend" disabled>
+                    <mwc-list-item value="js" selected>JS</mwc-list-item>
+                    <mwc-list-item value="swipl">SWI-Prolog</mwc-list-item>
+                </mwc-select>
 
-                    <div
-                        class="mdc-select__menu mdc-menu mdc-menu-surface mdc-menu-surface--fullwidth"
-                    >
-                        <ul class="mdc-list" role="listbox" aria-label="Food picker listbox">
-                            <li
-                                class="mdc-list-item mdc-list-item--selected"
-                                aria-selected="true"
-                                data-value="js"
-                                role="option"
-                            >
-                                <span class="mdc-list-item__ripple"></span>
-                                <span class="mdc-list-item__text">JS</span>
-                            </li>
-                            <li
-                                class="mdc-list-item"
-                                aria-selected="false"
-                                data-value="swipl"
-                                role="option"
-                            >
-                                <span class="mdc-list-item__ripple"></span>
-                                <span class="mdc-list-item__text">SWI-Prolog</span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+                <mwc-select filled class="algo-select" label="Search Algorithm" disabled>
+                    <mwc-list-item selected value="alphabeta">Alpha-Beta Pruning</mwc-list-item>
+                    <mwc-list-item value="minimax">Minimax</mwc-list-item>
+                </mwc-select>
 
-
-                <div class="mdc-select mdc-select--filled mdc-select--disabled algo-select">
-                    <div
-                        class="mdc-select__anchor"
-                        role="button"
-                        aria-haspopup="listbox"
-                        aria-expanded="false"
-                        aria-labelledby="demo-label demo-selected-text"
-                    >
-                        <span class="mdc-select__ripple"></span>
-                        <span id="demo-label" class="mdc-floating-label">Search algorithm</span>
-                        <span class="mdc-select__selected-text-container">
-                            <span id="demo-selected-text" class="mdc-select__selected-text"
-                                >Alpha-Beta Pruning</span
-                            >
-                        </span>
-                        <span class="mdc-select__dropdown-icon">
-                            <svg
-                                class="mdc-select__dropdown-icon-graphic"
-                                viewBox="7 10 10 5"
-                                focusable="false"
-                            >
-                                <polygon
-                                    class="mdc-select__dropdown-icon-inactive"
-                                    stroke="none"
-                                    fill-rule="evenodd"
-                                    points="7 10 12 15 17 10"
-                                ></polygon>
-                                <polygon
-                                    class="mdc-select__dropdown-icon-active"
-                                    stroke="none"
-                                    fill-rule="evenodd"
-                                    points="7 15 12 10 17 15"
-                                ></polygon>
-                            </svg>
-                        </span>
-                        <span class="mdc-line-ripple"></span>
-                    </div>
-
-                    <div
-                        class="mdc-select__menu mdc-menu mdc-menu-surface mdc-menu-surface--fullwidth"
-                    >
-                        <ul class="mdc-list" role="listbox" aria-label="Food picker listbox">
-                            <li
-                                class="mdc-list-item mdc-list-item--selected"
-                                aria-selected="true"
-                                data-value="alphabeta"
-                                role="option"
-                            >
-                                <span class="mdc-list-item__ripple"></span>
-                                <span class="mdc-list-item__text">Alpha-Beta Pruning</span>
-                            </li>
-                            <li
-                                class="mdc-list-item"
-                                aria-selected="false"
-                                data-value="minimax"
-                                role="option"
-                            >
-                                <span class="mdc-list-item__ripple"></span>
-                                <span class="mdc-list-item__text"> Minimax </span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-
-                <label class="mdc-text-field mdc-text-field--filled mdc-text-field--disabled">
-                    <span class="mdc-text-field__ripple"></span>
-                    <span class="mdc-floating-label" id="my-label-id">Search Depth</span>
-                    <input
-                        class="mdc-text-field__input"
-                        type="number"
-                        value="3"
-                        min="1"
-                        aria-labelledby="my-label-id"
-                    />
-                    <span class="mdc-line-ripple"></span>
-                </label>
+                <mwc-textfield label="Search Depth" type="number" value="3" min="1" disabled></mwc-textfield>
             </div>
 
-            <div id="mount-controls">
-                <div class="controls">
-                    <button id="move-white" class="foo-button mdc-button mdc-button--raised" disabled>
-                        <div class="mdc-button__ripple"></div>
-                        <span class="mdc-button__label">Make optimal white move</span>
-                    </button>
-                    <button id="move-black" class="foo-button mdc-button mdc-button--raised" disabled>
-                        <div class="mdc-button__ripple"></div>
-                        <span class="mdc-button__label">Make optimal black move</span>
-                    </button>
-                </div>
-            </div>
+            <checkers-controls disabled></checkers-controls>
         </div>
 
         <div class="mdc-snackbar">

@@ -1,5 +1,5 @@
-import { html, LitElement } from "lit"
-import { customElement, property } from "lit/decorators.js"
+import { html, LitElement, customElement, property } from "lit-element"
+import { ifDefined } from "../util/directives"
 import { Cell, Selection } from "../common"
 import "./Figure"
 import "./Queen"
@@ -14,7 +14,8 @@ export default class BoardCell extends LitElement {
     selection?: Selection
 
     render() {
-        const { cell, selection } = this
+        const { cell } = this
+        const selection = ifDefined(this.selection)
         switch (cell) {
             case "0":
                 return html`<checkers-square color="white"></checkers-square>`

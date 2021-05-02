@@ -3,7 +3,7 @@
 @use "@material/list/mdc-list"
 @use "@material/menu-surface/mdc-menu-surface"
 @use "@material/menu/mdc-menu"
-@use "@material/select/styles"
+// @use "@material/select/styles"
 @use "@material/floating-label/mdc-floating-label"
 @use "@material/line-ripple/mdc-line-ripple"
 @use "@material/notched-outline/mdc-notched-outline"
@@ -97,10 +97,11 @@
 .controls
     display: grid
     grid-template-columns: 1fr 1fr
+    gap: 20px
+    padding: 20px
 
-.foo-button
-    margin: 20px
-    @include button.container-fill-color(#2592c5)
+:root 
+    --mdc-theme-primary: #2592c5
 
 .algorithm-settings
     margin: 20px
@@ -126,7 +127,6 @@
 @media screen and ( max-width: 600px )
     .controls 
        grid-template-columns: auto
-       gap: 0
 
     .algorithm-settings
         grid-template-columns: auto

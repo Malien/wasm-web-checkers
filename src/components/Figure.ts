@@ -1,5 +1,4 @@
-import { LitElement, css, html } from "lit"
-import { customElement, property } from "lit/decorators.js"
+import { LitElement, css, html, customElement, property } from "lit-element"
 import { Player } from "src/common"
 
 @customElement("checkers-figure")
@@ -21,6 +20,12 @@ export default class Figure extends LitElement {
 
         .figure.white {
             background-color: white;
+        }
+
+        @media screen and (max-width: 600px) {
+            .figure.black {
+                border-width: 3px
+            }
         }
     `
 
