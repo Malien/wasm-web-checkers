@@ -2,8 +2,8 @@
 <html>
     <head>
         <meta charset="UTF-8" />
+        <script async src="/main.js"></script>
         <link rel="manifest" href="manifest.json" />
-        <link rel="stylesheet" href="styles.css" />
         <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css?family=Material+Icons&display=block" rel="stylesheet">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,9 +11,14 @@
         <link rel="apple-touch-icon" href="icon@1.5x.png">
         <link rel="icon" type="image/png" href="icon@1.5x.png"></link>
         <title>Prolog Web Checkers</title>
+        <style>
+            :root {
+                --mdc-theme-primary: #2592c5
+            }
+        </style>
     </head>
     <body>
-        <checkers-board origin='[1,2]' board='[
+        <checkers-board id="board" board='[
             ["0", "1", "0", "1", "0", "1", "0", "1"],
             ["1", "0", "1", "0", "1", "0", "1", "0"],
             ["0", "1", "0", "1", "0", "1", "0", "1"],
@@ -23,34 +28,7 @@
             ["0", "1", "0", "1", "0", "1", "0", "1"],
             ["1", "0", "1", "0", "1", "0", "1", "0"]
         ]'></checkers-board>
-
-        <div class="lower">
-            <div class="algorithm-settings">
-                <mwc-select filled class="backend-select" label="Backend" disabled>
-                    <mwc-list-item value="js" selected>JS</mwc-list-item>
-                    <mwc-list-item value="swipl">SWI-Prolog</mwc-list-item>
-                </mwc-select>
-
-                <mwc-select filled class="algo-select" label="Search Algorithm" disabled>
-                    <mwc-list-item selected value="alphabeta">Alpha-Beta Pruning</mwc-list-item>
-                    <mwc-list-item value="minimax">Minimax</mwc-list-item>
-                </mwc-select>
-
-                <mwc-textfield label="Search Depth" type="number" value="3" min="1" disabled></mwc-textfield>
-            </div>
-
-            <checkers-controls disabled></checkers-controls>
-        </div>
-
-        <div class="mdc-snackbar">
-            <div class="mdc-snackbar__surface" role="status" aria-relevant="additions">
-                <div class="mdc-snackbar__label" aria-atomic="false">
-                    App is ready for offline use
-                </div>
-            </div>
-        </div>
-
-        <script src="/main.js"></script>
-        <!-- <script src="/swipl-wasm/swipl-web.js"></script> -->
+        <checkers-settings></checkers-settings>
+        <mwc-snackbar id="installation-snackbar" labelText="App is ready for offline use"></mwc-snackbar>
     </body>
 </html>

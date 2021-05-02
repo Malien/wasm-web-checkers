@@ -1,27 +1,15 @@
 import { EngineType, GameLogicEngine, Move, Player, Position, SearchAlgorithm } from "./common"
 import "./components/Board"
-import "./components/Controls";
-import "@material/mwc-button"
-import "@material/mwc-textfield"
-import "@material/mwc-select"
-import { MDCRipple } from "@material/ripple"
-import { MDCSelect } from "@material/select"
-import { MDCTextField } from "@material/textfield"
-import { MDCSnackbar } from "@material/snackbar"
-import "./styles.sass"
+import "./components/Settings";
 import { JSGameLogic } from "./js"
-// import { JSGameLogic } from "./js/game"
-// import { SWIPLGameLogic } from "./swipl/game"
 
-// new MDCRipple(document.querySelector(".mdc-button")!)
+// const backendSelect = document.getElementById("backend-select") as Select
+// const algorithmSelect = document.getElementById("algo-select") as Select
+// const searchDepthField = document.getElementById("search-depth-field") as TextField
+// const snackbar = document.getElementById("installation-snackbar") as Snackbar
 
-// const backendSelect = new MDCSelect(document.querySelector(".backend-select")!)
-// const algorithmSelect = new MDCSelect(document.querySelector(".algo-select")!)
-// const searchDepthField = new MDCTextField(document.querySelector(".mdc-text-field")!)
-const snackbar = new MDCSnackbar(document.querySelector(".mdc-snackbar")!)
-
-const mountPoint = document.getElementById("mount") as HTMLDivElement
-const controlsMountPoint = document.getElementById("mount-controls") as HTMLDivElement
+// const board = document.getElementById("board") as Board
+// const controls = document.getElementById("controls") as Controls
 
 // if ("serviceWorker" in navigator) {
 //     navigator.serviceWorker.register("/sw.js")

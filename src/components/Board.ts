@@ -21,7 +21,7 @@ export default class Board extends LitElement {
     static styles = css`
         .board-container {
             position: relative;
-            max-width: min(1200px, calc(100vh - 220px));
+            max-width: min(1200px, calc(100vh - 200px));
             margin: auto;
             width: 100%;
             box-sizing: border-box;
