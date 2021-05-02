@@ -2,7 +2,7 @@
 
 import { expose } from "comlink"
 import type { Cell, BoardRow, GameBoard, Position, Player } from "../common"
-import type { PLMove, SwiplWorker } from "./swipl"
+import type { PLMove, SwiplWorker } from "./types"
 import { loadSwiplInWorker, TermRef, TermType } from "./lib/swipl"
 import { collectList, constructArgsArray, newTermRefs, bind as bindUtil } from "./lib/util"
 import { bind as bindTypecheck } from "./lib/typecheck"

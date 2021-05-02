@@ -9,7 +9,7 @@ import type {
     ValidPosition,
     SearchAlgorithm,
 } from "../common"
-import type { JSWorkerInterface, JSMove } from "./js"
+import type { JSWorkerInterface, JSMove } from "./types"
 
 const boundCheck = (pos: Position): pos is ValidPosition => {
     const [x, y] = pos

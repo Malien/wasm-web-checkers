@@ -1,9 +1,9 @@
 import * as comlink from "comlink"
-import { GameBoard, GameLogicModule, Move, Player, Position, SearchAlgorithm } from "src/common"
+import { GameBoard, GameLogicEngine, Move, Player, Position, SearchAlgorithm } from "src/common"
 import { TermRef } from "./lib/swipl"
-import { PLMove, SwiplWorker } from "./swipl"
+import { PLMove, SwiplWorker } from "./types"
 
-export class SWIPLGameLogic implements GameLogicModule {
+export class SWIPLGameLogic implements GameLogicEngine {
     worker: comlink.Remote<SwiplWorker>
     private moveAugmentations = new WeakMap<Move, TermRef>()
     private boardAugmentations = new WeakMap<GameBoard, TermRef>()

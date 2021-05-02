@@ -1,7 +1,7 @@
 import * as comlink from "comlink"
 import { allocateArray, Tuple } from "../util"
-import type { BoardRow, Cell, GameBoard, GameLogicModule, Move } from "../common"
-import type { JSWorkerProxy, JSMove } from "./js"
+import type { BoardRow, Cell, GameBoard, GameLogicEngine, Move } from "../common"
+import type { JSWorkerProxy, JSMove } from "./types"
 
 export const testBoards: Tuple<GameBoard, 6> = [
     [
@@ -83,7 +83,7 @@ export const initializedBoard: GameBoard = [
     offsetBoardRow("w"),
 ]
 
-export class JSGameLogic implements GameLogicModule {
+export class JSGameLogic implements GameLogicEngine {
     private moveAugmentations = new WeakMap<Move, GameBoard>()
     private worker: comlink.Remote<JSWorkerProxy>
 
@@ -102,16 +102,16 @@ export class JSGameLogic implements GameLogicModule {
         return move
     }
 
-    testBoard: GameLogicModule["testBoard"] = idx => Promise.resolve(testBoards[idx - 1]!)
+    testBoard: GameLogicEngine["testBoard"] = idx => Promise.resolve(testBoards[idx - 1]!)
 
-    initializeBoard: GameLogicModule["initializeBoard"] = () => Promise.resolve(initializedBoard)
+    initializeBoard: GameLogicEngine["initializeBoard"] = () => Promise.resolve(initializedBoard)
 
-    movesFor: GameLogicModule["movesFor"] = (board, position) =>
+    movesFor: GameLogicEngine["movesFor"] = (board, position) =>
         this.worker.movesFor(board, position).then(this.simplifyMoves)
 
-    canEat: GameLogicModule["canEat"] = (board, player) => this.worker.canEat(board, player)
+    canEat: GameLogicEngine["canEat"] = (board, player) => this.worker.canEat(board, player)
 
-    evaluateBestMove: GameLogicModule["evaluateBestMove"] = async (
+    evaluateBestMove: GameLogicEngine["evaluateBestMove"] = async (
         board,
         player,
         algorithm,
@@ -123,7 +123,7 @@ export class JSGameLogic implements GameLogicModule {
         return [this.simplifyMove(move), score]
     }
 
-    nextBoard: GameLogicModule["nextBoard"] = move => {
+    nextBoard: GameLogicEngine["nextBoard"] = move => {
         const board = this.moveAugmentations.get(move)
         if (!board)
             throw new Error(
@@ -133,5 +133,5 @@ export class JSGameLogic implements GameLogicModule {
         return Promise.resolve(board)
     }
 
-    encodeBoard: GameLogicModule["encodeBoard"] = Promise.resolve
+    encodeBoard: GameLogicEngine["encodeBoard"] = Promise.resolve
 }

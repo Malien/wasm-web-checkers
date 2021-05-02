@@ -7,6 +7,7 @@ interface ControlsProps {
     tookBlack?: number
     onWhiteClick?: () => void
     onBlackClick?: () => void
+    disabled?: boolean
 }
 
 export const Controls = ({
@@ -16,16 +17,17 @@ export const Controls = ({
     blackWaiting,
     tookWhite,
     tookBlack,
+    disabled
 }: ControlsProps) => html`
     <div class="controls">
         ${Button({
             label: whiteWaiting ? "White is making a move..." : "Make optimal white play",
-            disabled: whiteWaiting,
+            disabled: disabled || whiteWaiting,
             onClick: onWhiteClick,
         })}
         ${Button({
             label: blackWaiting ? "Black is making a move..." : "Make optimal black play",
-            disabled: blackWaiting,
+            disabled: disabled || blackWaiting,
             onClick: onBlackClick,
         })}
         ${tookWhite && html`<span class="took-measure left">Took ${tookWhite}ms</span>`}

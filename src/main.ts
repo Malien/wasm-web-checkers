@@ -1,6 +1,6 @@
-import { render } from "lit-html"
-import { Move, Player, Position, SearchAlgorithm } from "./common"
-import { Board } from "./board"
+import { render, html } from "lit"
+import { EngineType, GameLogicEngine, Move, Player, Position, SearchAlgorithm } from "./common"
+import "./board"
 // import "@material/mwc-button"/;
 import { MDCRipple } from "@material/ripple"
 import { MDCSelect } from "@material/select"
@@ -8,12 +8,14 @@ import { MDCTextField } from "@material/textfield"
 import { MDCSnackbar } from "@material/snackbar"
 import "./styles.sass"
 import { Controls } from "./controls"
-import { JSGameLogic } from "./js/game"
-import { SWIPLGameLogic } from "./swipl/game"
+import { JSGameLogic } from "./js"
+// import { JSGameLogic } from "./js/game"
+// import { SWIPLGameLogic } from "./swipl/game"
 
 new MDCRipple(document.querySelector(".mdc-button")!)
 
-const algorithmSelect = new MDCSelect(document.querySelector(".mdc-select")!)
+const backendSelect = new MDCSelect(document.querySelector(".backend-select")!)
+const algorithmSelect = new MDCSelect(document.querySelector(".algo-select")!)
 const searchDepthField = new MDCTextField(document.querySelector(".mdc-text-field")!)
 const snackbar = new MDCSnackbar(document.querySelector(".mdc-snackbar")!)
 
@@ -33,25 +35,65 @@ const controlsMountPoint = document.getElementById("mount-controls") as HTMLDivE
 // }
 
 // const game = new JSGameLogic()
-const game = new SWIPLGameLogic()
+// const game = new SWIPLGameLogic()
 
-game.ready.then(async () => {
-    console.log("Ready, but on main thread")
+async function initEngine(type: EngineType): Promise<GameLogicEngine> {
+    switch (type) {
+        case "js":
+            return new JSGameLogic()
+        case "swipl": {
+            const { SWIPLGameLogic } = await import("./swipl/game")
+            return new SWIPLGameLogic()
+        }
+    }
+}
+
+searchDepthField.disabled = true
+let isLoading = true
+
+initEngine(backendSelect.value as EngineType).then(async engine => {
+
+    const setLoading = () => {
+        backendSelect.disabled = true
+        algorithmSelect.disabled = true
+        searchDepthField.disabled = true
+        isLoading = true
+        renderControls()
+        // render(Board({ board, canEat }), mountPoint)
+    }
+
+    const setLoaded = () => {
+        backendSelect.disabled = false
+        algorithmSelect.disabled = false
+        searchDepthField.disabled = false
+        isLoading = false
+        renderControls()
+        // render(Board({ board, canEat, onClick: showMoves, onMove: makeMove }), mountPoint)
+    }
+
+    await engine.ready
+    const game = engine
+
+    // setLoaded()
+
+    function reinitEngine(newEngine: GameLogicEngine) {}
+
+    backendSelect.listen("MDCSelect:change", () => {})
 
     const showMoves = async (position: Position) => {
         currentMoves = await game.movesFor(board, position)
 
-        render(
-            Board({
-                board,
-                onClick: showMoves,
-                origin: position,
-                moves: currentMoves.map(({ to }) => to),
-                onMove: makeMove,
-                canEat,
-            }),
-            mountPoint
-        )
+        // render(
+        //     Board({
+        //         board,
+        //         onClick: showMoves,
+        //         origin: position,
+        //         moves: currentMoves.map(({ to }) => to),
+        //         onMove: makeMove,
+        //         canEat,
+        //     }),
+        //     mountPoint
+        // )
     }
 
     const calculateCanEat = async (): Promise<Position[]> => {
@@ -69,15 +111,15 @@ game.ready.then(async () => {
             board = await game.nextBoard(move)
             canEat = await calculateCanEat()
 
-            render(
-                Board({
-                    board,
-                    onClick: showMoves,
-                    onMove: makeMove,
-                    canEat,
-                }),
-                mountPoint
-            )
+            // render(
+            //     Board({
+            //         board,
+            //         onClick: showMoves,
+            //         onMove: makeMove,
+            //         canEat,
+            //     }),
+            //     mountPoint
+            // )
         }
     }
 
@@ -98,15 +140,15 @@ game.ready.then(async () => {
         waiting[forPlayer] = false
         renderControls()
 
-        render(
-            Board({
-                board,
-                onClick: showMoves,
-                onMove: makeMove,
-                canEat,
-            }),
-            mountPoint
-        )
+        // render(
+        //     Board({
+        //         board,
+        //         onClick: showMoves,
+        //         onMove: makeMove,
+        //         canEat,
+        //     }),
+        //     mountPoint
+        // )
     }
 
     const renderControls = () => {
@@ -118,6 +160,7 @@ game.ready.then(async () => {
                 tookBlack: took.black,
                 onWhiteClick,
                 onBlackClick,
+                disabled: isLoading,
             }),
             controlsMountPoint
         )
@@ -153,15 +196,16 @@ game.ready.then(async () => {
 
     renderControls()
 
-    render(
-        Board({
-            board,
-            onClick: showMoves,
-            onMove: makeMove,
-            moves: currentMoves.map(({ to }) => to),
-        }),
-        mountPoint
-    )
-    console.log(board)
+    // render(
+    //     Board({
+    //         board,
+    //         onClick: showMoves,
+    //         onMove: makeMove,
+    //         moves: currentMoves.map(({ to }) => to),
+    //     }),
+    //     mountPoint
+    // )
 
+    // render(html`<checkers-board board=${JSON.stringify(board)} origin=${JSON.stringify([1,2])}></checkers-board>`, mountPoint)
+    console.log(board)
 })

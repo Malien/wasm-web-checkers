@@ -25,7 +25,7 @@ export type Move = {
     to: Position
 }
 
-export interface GameLogicModule {
+export interface GameLogicEngine {
     ready: Promise<void>
     testBoard(idx: 1 | 2 | 3 | 4 | 5 | 6): Promise<GameBoard>
     initializeBoard(): Promise<GameBoard>
@@ -41,3 +41,5 @@ export interface GameLogicModule {
     nextBoard(move: Move): Promise<GameBoard>
     encodeBoard(board: GameBoard): Promise<GameBoard>
 }
+
+export type EngineType = "swipl" | "js"

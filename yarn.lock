@@ -28,6 +28,11 @@
   resolved "https://registry.yarnpkg.com/@discoveryjs/json-ext/-/json-ext-0.5.2.tgz#8f03a22a04de437254e8ce8cc84ba39689288752"
   integrity sha512-HyYEUDeIj5rRQU2Hk5HTB2uHsbRQpF70nvMhVzi+VJR0X+xNEhjPui4/kBf3VeH/wqD28PT4sVOm8qqLjBrSZg==
 
+"@lit/reactive-element@^1.0.0-rc.1":
+  version "1.0.0-rc.1"
+  resolved "https://registry.yarnpkg.com/@lit/reactive-element/-/reactive-element-1.0.0-rc.1.tgz#3e6639241de1f63f7746b4b410df1c7fb206e15f"
+  integrity sha512-TLRPKOhQLNOMcpCXHiTKrNKX5eNzhf9y07jp27MXkjTH1IbXFvcT9/mVdOG/3qfMkip+iO6CEfv5a+y0wFhQig==
+
 "@material/animation@^10.0.0":
   version "10.0.0"
   resolved "https://registry.yarnpkg.com/@material/animation/-/animation-10.0.0.tgz#2833a1779426715b418b65eb4c9344bf647a84fa"
@@ -499,6 +504,11 @@
   dependencies:
     terser "^5.3.8"
     webpack "^5.1.0"
+
+"@types/trusted-types@^1.0.1":
+  version "1.0.6"
+  resolved "https://registry.yarnpkg.com/@types/trusted-types/-/trusted-types-1.0.6.tgz#569b8a08121d3203398290d602d84d73c8dcf5da"
+  integrity sha512-230RC8sFeHoT6sSUlRO6a8cAnclO06eeiq1QDfiv2FGCLWFvvERWgwIQD4FWqD9A69BN7Lzee4OXwoMVnnsWDw==
 
 "@types/uglify-js@*":
   version "3.13.0"
@@ -3661,10 +3671,34 @@ lines-and-columns@^1.1.6:
   resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-1.1.6.tgz#1c00c743b433cd0a4e80758f7b64a57440d9ff00"
   integrity sha1-HADHQ7QzzQpOgHWPe2SldEDZ/wA=
 
+lit-element@^3.0.0-rc.1:
+  version "3.0.0-rc.1"
+  resolved "https://registry.yarnpkg.com/lit-element/-/lit-element-3.0.0-rc.1.tgz#1d67c835364adc6ca051c68a7699e2123fa1a16c"
+  integrity sha512-SQH7LODMy+42UTOGiyHUTXronvv8Cud0Y/8Q8/1jd/9Putuh66GjN7FEjyNRxVbpIygnPqMbG854J9Ct9IJlFw==
+  dependencies:
+    "@lit/reactive-element" "^1.0.0-rc.1"
+    lit-html "^2.0.0-rc.1"
+
 lit-html@^1.3.0:
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/lit-html/-/lit-html-1.3.0.tgz#c80f3cc5793a6dea6c07172be90a70ab20e56034"
   integrity sha512-0Q1bwmaFH9O14vycPHw8C/IeHMk/uSDldVLIefu/kfbTBGIc44KGH6A8p1bDfxUfHdc8q6Ct7kQklWoHgr4t1Q==
+
+lit-html@^2.0.0-rc.1:
+  version "2.0.0-rc.2"
+  resolved "https://registry.yarnpkg.com/lit-html/-/lit-html-2.0.0-rc.2.tgz#c7ac652af1df7e5d8e32a3e6130221766d09cbde"
+  integrity sha512-rl3vtIQ0jq6r0GVbg+57Et9ra+iNhiz/v5V7uPTb6VxnjJaCCYKI7WkzKNlyzjMM2N/ytih3Uxb5vyyaOpjb0Q==
+  dependencies:
+    "@types/trusted-types" "^1.0.1"
+
+lit@^2.0.0-rc.1:
+  version "2.0.0-rc.1"
+  resolved "https://registry.yarnpkg.com/lit/-/lit-2.0.0-rc.1.tgz#e1cb53ea3ba0f77b5a9235282b4b257efa8b972a"
+  integrity sha512-cf4r18feMhu56sO963a5MaHUn6OX2Am9sj9lzyGTYx2IPDhC9NP/Xh4rj9Ialo9dA+lI4brD7+9cxSzRIWHOmw==
+  dependencies:
+    "@lit/reactive-element" "^1.0.0-rc.1"
+    lit-element "^3.0.0-rc.1"
+    lit-html "^2.0.0-rc.1"
 
 loader-runner@^4.2.0:
   version "4.2.0"

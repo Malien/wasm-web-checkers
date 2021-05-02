@@ -1,2 +1,2 @@
-export * from "./js"
+export * from "./types"
 export * from "./game"
