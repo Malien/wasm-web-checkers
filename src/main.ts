@@ -1,6 +1,6 @@
 import { render, html } from "lit"
 import { EngineType, GameLogicEngine, Move, Player, Position, SearchAlgorithm } from "./common"
-import "./board"
+import "./components/Board"
 // import "@material/mwc-button"/;
 import { MDCRipple } from "@material/ripple"
 import { MDCSelect } from "@material/select"

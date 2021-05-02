@@ -25,6 +25,8 @@ export type Move = {
     to: Position
 }
 
+export type Selection = "origin" | "move" | "eat"
+
 export interface GameLogicEngine {
     ready: Promise<void>
     testBoard(idx: 1 | 2 | 3 | 4 | 5 | 6): Promise<GameBoard>
