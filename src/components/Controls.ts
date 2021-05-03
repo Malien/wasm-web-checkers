@@ -1,5 +1,13 @@
 import { LitElement, html, property, css, customElement } from "lit-element"
 import "@material/mwc-button"
+import { Player } from "../common"
+import { capitalize } from "../util"
+
+export class MakePlayEvent extends Event {
+    constructor(public player: Player) {
+        super("checkers-make-play", { bubbles: true, composed: true })
+    }
+}
 
 @customElement("checkers-controls")
 export default class Controls extends LitElement {
@@ -14,7 +22,8 @@ export default class Controls extends LitElement {
         .took-measure {
             margin: auto;
             display: block;
-            font-family: Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            font-family: Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+                sans-serif;
             color: lightgray;
         }
 
@@ -40,7 +49,7 @@ export default class Controls extends LitElement {
                 grid-row: 3;
                 margin-top: 20px;
             }
-            
+
             .took-measure {
                 margin-top: 5px;
             }
@@ -72,17 +81,34 @@ export default class Controls extends LitElement {
     @property({ type: Boolean })
     disabled = false
 
+    button(forPlayer: Player, waiting: boolean) {
+        const label = waiting
+            ? `${capitalize(forPlayer)} is making a move...`
+            : `Make an optimal ${forPlayer} play`
+        return html`<mwc-button
+            class="button ${forPlayer}"
+            raised
+            label=${label}
+            ?disabled=${this.disabled || waiting}
+            @click=${() => this.dispatchEvent(new MakePlayEvent(forPlayer))}
+        ></mwc-button>`
+    }
+
     render() {
-        const { whiteWaiting, disabled, blackWaiting, tookWhite, tookBlack } = this
-        const whiteLabel = whiteWaiting ? "White is making a move..." : "Make an optimal white play"
-        const blackLabel = blackWaiting ? "Black is making a move..." : "Make an optimal black play"
+        const { whiteWaiting, blackWaiting, tookWhite, tookBlack } = this
         return html`
             <div class="controls">
-                <mwc-button class="button white" raised label=${whiteLabel} ?disabled=${disabled || whiteWaiting}></mwc-button>
-                <mwc-button class="button black" raised label=${blackLabel} ?disabled=${disabled || blackWaiting}></mwc-button>
+                ${this.button("white", whiteWaiting)}
+                ${this.button("black", blackWaiting)}
                 ${tookWhite && html`<span class="took-measure white">Took ${tookWhite}ms</span>`}
                 ${tookBlack && html`<span class="took-measure black">Took ${tookBlack}ms</span>`}
             </div>
         `
+    }
+}
+
+declare global {
+    interface HTMLElementTagNameMap {
+        "checkers-controls": Controls
     }
 }

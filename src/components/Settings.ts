@@ -1,12 +1,12 @@
 import { css, customElement, html, property } from "lit-element"
-import { EngineType, SearchAlgorithm } from "../common"
-import "@material/mwc-select";
+import { EngineType, SearchAlgorithm, isSearchAlgorithm, isEngineType } from "../common"
+import "@material/mwc-select"
 import { Select } from "@material/mwc-select"
 import "@material/mwc-textfield"
 import { TextField } from "@material/mwc-textfield"
 import "@material/mwc-snackbar"
 import Controls from "./Controls"
-import { ifDefined } from "../util/directives";
+import { ifDefined } from "../util/directives"
 
 export class BackendChangeEvent extends Event {
     constructor(public newValue: EngineType) {
@@ -61,13 +61,15 @@ export default class Settings extends Controls {
     handleBackend(ev: Event) {
         ev.stopPropagation()
         const backendSelect = ev.target as Select
-        dispatchEvent(new BackendChangeEvent(backendSelect.value as EngineType))
+        if (!isEngineType(backendSelect.value)) return
+        this.dispatchEvent(new BackendChangeEvent(backendSelect.value))
     }
 
     handleAlgorithm(ev: Event) {
         ev.stopPropagation()
         const algoSelect = ev.target as Select
-        dispatchEvent(new AlgorithmChangeEvent(algoSelect.value as SearchAlgorithm))
+        if (!isSearchAlgorithm(algoSelect.value)) return
+        this.dispatchEvent(new AlgorithmChangeEvent(algoSelect.value))
     }
 
     handleInput(ev: Event) {
@@ -144,5 +146,11 @@ export default class Settings extends Controls {
                 ></checkers-controls>
             </div>
         `
+    }
+}
+
+declare global {
+    interface HTMLElementTagNameMap {
+        "checkers-settings": Settings
     }
 }

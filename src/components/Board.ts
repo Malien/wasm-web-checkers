@@ -1,11 +1,12 @@
 import { css, html, LitElement, property, customElement } from "lit-element"
-import { GameBoard, Position, Selection } from "../common"
+import { GameBoard, Piece, Position, Selection, isPiece } from "../common"
 import { ifDefined } from "../util/directives"
 import BoardCell from "./BoardCell"
 import "./BoardCell"
+import { cmpPositions } from "../util"
 
 export class SelectCheckersEvent extends Event {
-    constructor(public position: Position) {
+    constructor(public position: Position, public piece: Piece) {
         super("checkers-select", { bubbles: true, composed: true })
     }
 }
@@ -49,7 +50,7 @@ export default class Board extends LitElement {
 
         @media screen and (max-width: 600px) {
             .board {
-                border-width: 10px
+                border-width: 10px;
             }
         }
     `
@@ -63,43 +64,56 @@ export default class Board extends LitElement {
     @property({ type: Array })
     moves: Position[] = []
 
-    @property({ type: Array })
+    @property({ type: Array, attribute: "can-eat" })
     canEat: Position[] = []
 
     private handleClick(ev: Event) {
         const cell = (ev.target as HTMLElement).closest<BoardCell>("checkers-cell")
         if (!cell) return
-        if (!cell.dataset["position"]) return
-        const position = cell.dataset["position"].split(",").map(v => parseInt(v)) as Position
-        const isMove = this.moves.some(move => cmpPositions(move, position))
+        if (!cell.dataset["positionX"] || !cell.dataset["positionY"]) return
+        const { positionX, positionY } = cell.dataset
+        const position = [parseInt(positionX), parseInt(positionY)] as Position
+        const isMove = cell.selection === "move"
         if (isMove) {
             this.dispatchEvent(new MoveCheckersEvent(this.origin, position))
-        } else {
-            this.dispatchEvent(new SelectCheckersEvent(position))
+        } else if (isPiece(cell.cell)) {
+            this.dispatchEvent(new SelectCheckersEvent(position, cell.cell))
         }
     }
 
     render() {
         const { board, origin, moves, canEat } = this
-        console.log({ board, origin, moves, canEat })
         return html`
             <div class="board-container">
                 <div class="board" @click=${this.handleClick}>
                     ${board.flat().map((cell, index) => {
                         const position: Position = [index % 8, (index / 8) | 0]
                         const isEat = canEat.some(move => cmpPositions(move, position))
+                        const isMove = moves.some(move => cmpPositions(move, position))
                         let selection: Selection | undefined
                         if (isEat) {
                             selection = "eat"
+                        }
+                        if (isMove) {
+                            selection = "move"
                         }
                         if (origin && origin[0] == position[0] && origin[1] == position[1]) {
                             selection = "origin"
                         }
 
+                        if (selection) {
+                            return html`<checkers-cell
+                                data-position-x=${position[0]}
+                                data-position-y=${position[1]}
+                                cell=${cell}
+                                selection=${ifDefined(selection)}
+                            ></checkers-cell>`
+                        }
+
                         return html`<checkers-cell
-                            data-position=${position}
+                            data-position-x=${position[0]}
+                            data-position-y=${position[1]}
                             cell=${cell}
-                            selection=${ifDefined(selection)}
                         ></checkers-cell>`
                     })}
                 </div>
@@ -108,4 +122,8 @@ export default class Board extends LitElement {
     }
 }
 
-const cmpPositions = ([a, b]: Position, [x, y]: Position) => a == x && b == y
+declare global {
+    interface HTMLElementTagNameMap {
+        "checkers-board": Board
+    }
+}

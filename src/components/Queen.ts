@@ -36,3 +36,9 @@ export default class Queen extends LitElement {
         `
     }
 }
+
+declare global {
+    interface HTMLElementTagNameMap {
+        "checkers-queen": Queen
+    }
+}

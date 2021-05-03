@@ -43,3 +43,9 @@ export default class BoardCell extends LitElement {
         }
     }
 }
+
+declare global {
+    interface HTMLElementTagNameMap {
+        "checkers-cell": BoardCell
+    }
+}

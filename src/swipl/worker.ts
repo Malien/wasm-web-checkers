@@ -117,6 +117,9 @@ const reexport = <P extends FuncConfKeys>(prop: P): Reexported<P> =>
         return conf[prop](...args)
     }) as any
 
+const boardRowTermStr = (row: BoardRow) => `l(${row.join(",")})`
+const boardTermStr = (board: GameBoard) => `game_board(${board.map(boardRowTermStr).join(",")})`
+
 const worker: SwiplWorker = {
     ready: configured.then(() => {}),
 
@@ -200,6 +203,15 @@ const worker: SwiplWorker = {
         if (!callPredicate(predicates.nextPlayer, currentPlayer))
             throw new Error(`Next player for ${player} is not defined`)
         return getAtomChars(nextPlayer) as Player
+    },
+
+    async encodeBoard(board) {
+        const { PL } = await configured
+        const str = boardTermStr(board)
+        const boardTerm = PL.newTermRef()
+        if (!PL.charsToTerm(str, boardTerm)) 
+            throw new Error(`Can't convert js game board to PL term`)
+        return boardTerm
     },
 }
 

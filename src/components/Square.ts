@@ -46,3 +46,9 @@ export default class Square extends LitElement {
         </div>`
     }
 }
+
+declare global {
+    interface HTMLElementTagNameMap {
+        "checkers-square": Square
+    }
+}

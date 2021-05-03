@@ -76,7 +76,8 @@ export class SWIPLGameLogic implements GameLogicEngine {
 
     nextBoard = (move: Move) => this.toJSBoard(this.nextBoardFromMove(move))
 
-    encodeBoard(board: GameBoard): Promise<GameBoard> {
-        throw new Error("Method not implemented.")
+    async encodeBoard(board: GameBoard): Promise<GameBoard> {
+        const boardTerm = await this.worker.encodeBoard(board)
+        return await this.toJSBoard(boardTerm)
     }
 }

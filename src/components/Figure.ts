@@ -38,3 +38,9 @@ export default class Figure extends LitElement {
         </div>`
     }
 }
+
+declare global {
+    interface HTMLElementTagNameMap {
+        "checkers-figure": Figure
+    }
+}

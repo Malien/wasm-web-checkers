@@ -1,7 +1,4 @@
-import { EngineType, GameLogicEngine, Move, Player, Position, SearchAlgorithm } from "./common"
-import "./components/Board"
-import "./components/Settings";
-import { JSGameLogic } from "./js"
+import "./App";
 
 // const backendSelect = document.getElementById("backend-select") as Select
 // const algorithmSelect = document.getElementById("algo-select") as Select
@@ -25,17 +22,6 @@ import { JSGameLogic } from "./js"
 
 // const game = new JSGameLogic()
 // const game = new SWIPLGameLogic()
-
-async function initEngine(type: EngineType): Promise<GameLogicEngine> {
-    switch (type) {
-        case "js":
-            return new JSGameLogic()
-        case "swipl": {
-            const { SWIPLGameLogic } = await import("./swipl/game")
-            return new SWIPLGameLogic()
-        }
-    }
-}
 
 // searchDepthField.disabled = true
 // let isLoading = true

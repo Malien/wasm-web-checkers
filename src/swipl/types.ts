@@ -25,4 +25,5 @@ export type SwiplWorker = CoverPromises<{
     ): [move: PLMove, score: number] | undefined
     canEat(boardTerm: TermRef, player: Player): Position[]
     nextPlayer(player: Player): Player
+    encodeBoard(board: GameBoard): TermRef
 }>
