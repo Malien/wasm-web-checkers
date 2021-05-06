@@ -1,13 +1,10 @@
-pub mod game;
-pub mod lib;
-pub mod types;
-use types::{Board, Position};
+use checkers_rs::{Board, Position};
 
 fn main() {
     let board = Board::default();
     let position = Position { x: 2, y: 5 };
 
-    match lib::moves_for(board, position) {
+    match checkers_rs::moves_for(board, position) {
         None => {
             println!("Cell {:?} is not a piece", board.cell_at(position));
         }

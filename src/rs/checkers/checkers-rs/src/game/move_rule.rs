@@ -41,7 +41,7 @@ pub trait MoveRule {
     fn chain<H>(self, next: H) -> ChainHandler<SingleRuleSeq<Self>, SingleRuleSeq<H>>
     where
         Self: Sized,
-        H: MoveRule
+        H: MoveRule,
     {
         seq(self).chain(seq(next))
     }

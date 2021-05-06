@@ -1,5 +1,4 @@
 use super::{Piece, Player};
-use crate::ts_type;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -60,7 +59,7 @@ impl Cell {
     pub fn is_enemy_to(self, player: Player) -> bool {
         match self.player_affiliation() {
             None => false,
-            Some(other) => other.is_enemy_to(player)
+            Some(other) => other.is_enemy_to(player),
         }
     }
 }
@@ -72,10 +71,3 @@ pub fn promote(y: u8, cell: Cell) -> Cell {
         _ => cell,
     }
 }
-
-ts_type!(
-    Cell,
-    TSCell,
-    "Cell",
-    r#"type Cell = "0" | "1" | "w" | "b" | "wq" | "bq""#
-);

@@ -6,8 +6,6 @@ use serde::{
 };
 use std::fmt;
 
-use crate::ts_type;
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Position {
     pub x: u8,
@@ -57,10 +55,3 @@ impl<'de> Deserialize<'de> for Position {
         deserializer.deserialize_tuple(2, PosVisitor)
     }
 }
-
-ts_type!(
-    Position,
-    TSPosition,
-    "Position",
-    "type Position = [x: number, y: number]"
-);

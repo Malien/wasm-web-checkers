@@ -23,7 +23,10 @@ where
     }
 }
 
-impl<S> RuleSeq for IfPlayer<S> where S: RuleSeq {
+impl<S> RuleSeq for IfPlayer<S>
+where
+    S: RuleSeq,
+{
     fn next(&mut self, board: &Board, from: Position, piece: Piece) -> Option<Move> {
         if board.cell_at(from).is_enemy_to(self.player) {
             None
@@ -64,7 +67,6 @@ where
         }
     }
 }
-
 
 #[derive(Debug, Clone, Copy)]
 pub struct HandlerFilter<H, T> {
