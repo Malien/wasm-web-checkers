@@ -6,8 +6,8 @@ use super::Player;
 #[repr(u8)]
 pub enum Piece {
     White = 0b00,
-    Black = 0b10,
-    WhiteQueen = 0b01,
+    Black = 0b01,
+    WhiteQueen = 0b10,
     BlackQueen = 0b11,
 }
 
@@ -21,6 +21,6 @@ impl Piece {
     }
 
     pub fn is_queen(&self) -> bool {
-        ((*self as u8) << 1) & 1 == 1
+        ((*self as u8) >> 1) & 1 == 1
     }
 }

@@ -7,13 +7,13 @@ pub enum Cell {
     #[serde(rename = "0")]
     White = 0b000,
     #[serde(rename = "1")]
-    Black = 0b100,
+    Black = 0b001,
     #[serde(rename = "w")]
-    WhitePiece = 0b001,
+    WhitePiece = 0b100,
     #[serde(rename = "b")]
     BlackPiece = 0b101,
     #[serde(rename = "wq")]
-    WhiteQueen = 0b011,
+    WhiteQueen = 0b110,
     #[serde(rename = "bq")]
     BlackQueen = 0b111,
 }
@@ -25,19 +25,23 @@ impl Default for Cell {
 }
 
 impl Cell {
-    pub fn is_piece(&self) -> bool {
-        ((*self as u8) << 2) & 1 == 1
+    pub fn is_piece(self) -> bool {
+        ((self as u8) >> 2) & 1 == 1
     }
 
-    pub fn player_affiliation(&self) -> Option<Player> {
+    pub fn player_affiliation(self) -> Option<Player> {
         if !self.is_piece() {
             None
         } else {
-            // SAFETY: The first bit of Cell enum value represents color affiliation
-            // The two only possible variants for Player enum is White = 0 and Black = 1
-            // which is exactly what values (cell & 1) yields
-            Some(unsafe { Player::from_unchecked(*self as u8 & 1) })
+            Some(self.color())
         }
+    }
+
+    pub fn color(self) -> Player {
+        // SAFETY: The first bit of Cell enum value represents color affiliation
+        // The two only possible variants for Player enum is White = 0 and Black = 1
+        // which is exactly what values (cell & 1) yields
+        unsafe { Player::from_unchecked(self as u8 & 1) }
     }
 
     pub fn into_piece(self) -> Option<Piece> {
@@ -49,8 +53,23 @@ impl Cell {
             // Such conversion to Piece is fine, since we've checked for it being figure,
             // and the only possible values produced from (cell & 0b11) are:
             // 0b00, 0b10, 0b01 and 0b11, which correspond exactly to Pieces values
-            Some(unsafe { Piece::from_unchecked(self as u8 & 0b11) })
+            Some(unsafe { Piece::from_unchecked(self as u8 & 0b011) })
         }
+    }
+
+    pub fn is_enemy_to(self, player: Player) -> bool {
+        match self.player_affiliation() {
+            None => false,
+            Some(other) => other.is_enemy_to(player)
+        }
+    }
+}
+
+pub fn promote(y: u8, cell: Cell) -> Cell {
+    match (y, cell) {
+        (7, Cell::BlackPiece) => Cell::BlackQueen,
+        (0, Cell::WhitePiece) => Cell::WhiteQueen,
+        _ => cell,
     }
 }
 

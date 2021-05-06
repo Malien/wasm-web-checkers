@@ -1,6 +1,6 @@
 use std::usize;
-use super::{Cell, Player, Position, Row};
-use crate::{promote, ts_type};
+use super::{Cell, Position, Row, promote};
+use crate::{ts_type};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -14,7 +14,7 @@ ts_type!(
 );
 
 impl Board {
-    pub fn element_at(&self, Position { x, y }: Position) -> Cell {
+    pub fn cell_at(&self, Position { x, y }: Position) -> Cell {
         self.0[y as usize].0[x as usize]
     }
 
@@ -39,18 +39,98 @@ impl Board {
     }
 
     pub fn move_cell(&mut self, from: Position, to: Position) {
-        self.replace(to, promote(to.y, self.element_at(from)));
+        self.replace(to, promote(to.y, self.cell_at(from)));
         self.remove(from);
     }
 
     pub fn is_occupied(&self, pos: Position) -> bool {
-        !self.element_at(pos).is_piece()
+        self.cell_at(pos).is_piece()
     }
+}
 
-    pub fn is_enemy(&self, pos: Position, to_player: Player) -> bool {
-        match self.element_at(pos).player_affiliation() {
-            None => false,
-            Some(other_player) => other_player.is_enemy(to_player)
-        }
+impl Default for Board {
+    fn default() -> Self {
+    Board([
+        Row([
+            Cell::White,
+            Cell::BlackPiece,
+            Cell::White,
+            Cell::BlackPiece,
+            Cell::White,
+            Cell::BlackPiece,
+            Cell::White,
+            Cell::BlackPiece,
+        ]),
+        Row([
+            Cell::BlackPiece,
+            Cell::White,
+            Cell::BlackPiece,
+            Cell::White,
+            Cell::BlackPiece,
+            Cell::White,
+            Cell::BlackPiece,
+            Cell::White,
+        ]),
+        Row([
+            Cell::White,
+            Cell::BlackPiece,
+            Cell::White,
+            Cell::BlackPiece,
+            Cell::White,
+            Cell::BlackPiece,
+            Cell::White,
+            Cell::BlackPiece,
+        ]),
+        Row([
+            Cell::Black,
+            Cell::White,
+            Cell::Black,
+            Cell::White,
+            Cell::Black,
+            Cell::White,
+            Cell::Black,
+            Cell::White,
+        ]),
+        Row([
+            Cell::White,
+            Cell::Black,
+            Cell::White,
+            Cell::Black,
+            Cell::White,
+            Cell::Black,
+            Cell::White,
+            Cell::Black,
+        ]),
+        Row([
+            Cell::WhitePiece,
+            Cell::White,
+            Cell::WhitePiece,
+            Cell::White,
+            Cell::WhitePiece,
+            Cell::White,
+            Cell::WhitePiece,
+            Cell::White,
+        ]),
+        Row([
+            Cell::White,
+            Cell::WhitePiece,
+            Cell::White,
+            Cell::WhitePiece,
+            Cell::White,
+            Cell::WhitePiece,
+            Cell::White,
+            Cell::WhitePiece,
+        ]),
+        Row([
+            Cell::WhitePiece,
+            Cell::White,
+            Cell::WhitePiece,
+            Cell::White,
+            Cell::WhitePiece,
+            Cell::White,
+            Cell::WhitePiece,
+            Cell::White,
+        ]),
+    ])
     }
 }

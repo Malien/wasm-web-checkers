@@ -1,7 +1,7 @@
 use crate::ts_type;
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug, Clone, Copy, Serialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Sizes {
     pub cell: usize,
     pub row: usize,

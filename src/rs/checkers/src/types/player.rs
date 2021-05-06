@@ -5,14 +5,14 @@ use num_enum::UnsafeFromPrimitive;
 pub enum Player { White = 0, Black = 1 }
 
 impl Player {
-    fn next(self) -> Self {
+    pub fn next(self) -> Self {
         match self {
             Player::White => Player::Black,
             Player::Black => Player::White
         }
     }
 
-    fn is_enemy(&self, to: Player) -> bool{
-        *self != to
+    pub fn is_enemy_to(self, other: Player) -> bool{
+        self != other
     }
 }
