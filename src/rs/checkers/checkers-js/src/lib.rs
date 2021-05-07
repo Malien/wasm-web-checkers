@@ -1,6 +1,6 @@
 mod types;
 use checkers_rs::{Board, Move, Position, Sizes};
-use types::{TSBoard, TSMove, TSPlayer, TSPosition, TSSizes, TSSolution};
+use types::{Solution, TSBoard, TSMove, TSPlayer, TSPosition, TSSizes, TSSolution};
 
 #[cfg(feature = "wee_alloc")]
 #[global_allocator]
@@ -86,8 +86,18 @@ pub fn available_moves(board: TSBoard, player: TSPlayer) -> TSMoveArray {
 
 #[wasm_bindgen]
 pub fn minimax(board: TSBoard, player: TSPlayer, depth: u8) -> Option<TSSolution> {
-    match checkers_rs::minimax(board.into(), player.into(), depth) {
-        checkers_rs::Solution::NoMoves | checkers_rs::Solution::Score(_) => None,
-        checkers_rs::Solution::Move(mv, score) => Some(types::Solution(mv, score).into()),
-    }
+    Solution::from_checkers(checkers_rs::minimax(board.into(), player.into(), depth))
+        .map(TSSolution::from)
+}
+
+#[wasm_bindgen]
+pub fn alphabeta(board: TSBoard, player: TSPlayer, depth: u8) -> Option<TSSolution> {
+    Solution::from_checkers(checkers_rs::alphabeta(
+        board.into(),
+        player.into(),
+        i32::MIN,
+        i32::MAX,
+        depth,
+    ))
+    .map(TSSolution::from)
 }

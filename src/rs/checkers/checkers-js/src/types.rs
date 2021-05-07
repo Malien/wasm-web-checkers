@@ -1,5 +1,5 @@
 use checkers_rs::{Board, Cell, Move, Player, Position, Row, Sizes};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[wasm_bindgen::prelude::wasm_bindgen(typescript_custom_section)]
 const TS_TYPES_STR: &'static str = r#"
@@ -58,3 +58,12 @@ ts_type!(Player, TSPlayer, "Player");
 pub struct Solution(pub Move, pub i32);
 
 ts_type!(Solution, TSSolution, "Solution");
+
+impl Solution {
+    pub fn from_checkers(value: checkers_rs::Solution) -> Option<Self> {
+        match value {
+            checkers_rs::Solution::NoMoves | checkers_rs::Solution::Score(_) => None,
+            checkers_rs::Solution::Move(mv, score) => Some(Solution(mv, score).into()),
+        }
+    }
+}

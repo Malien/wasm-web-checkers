@@ -1,3 +1,5 @@
+use std::cmp::{max, min};
+
 use super::evaluate::Evaluate;
 use crate::{Board, Move, Player};
 
@@ -62,4 +64,57 @@ fn best_move(
         }
     }
     Solution::new(score, res)
+}
+
+pub fn alphabeta(board: Board, player: Player, mut alpha: i32, mut beta: i32, depth: u8) -> Solution {
+    if depth == 0 {
+        return Solution::Score(board.evaluate());
+    }
+
+    let moves = crate::available_moves(board, player);
+    if player == Player::Black {
+        let mut score = None;
+        let mut res = None;
+        for mv in moves {
+            let next = alphabeta(mv.next_board, player.next(), alpha, beta, depth - 1);
+            let current_score = next.score().unwrap_or_else(|| mv.next_board.evaluate());
+            if let Some(ref mut score) = score {
+                if current_score < *score {
+                    *score = current_score;
+                    res = Some(mv);
+                    beta = min(beta, current_score);
+                }
+            } else {
+                score = Some(current_score);
+                res = Some(mv);
+                beta = max(beta, current_score);
+            }
+            if beta <= alpha {
+                break;
+            }
+        }
+        Solution::new(score, res)
+    } else {
+        let mut score = None;
+        let mut res = None;
+        for mv in moves {
+            let next = alphabeta(mv.next_board, player.next(), alpha, beta, depth - 1);
+            let current_score = next.score().unwrap_or_else(|| mv.next_board.evaluate());
+            if let Some(ref mut score) = score {
+                if current_score < *score {
+                    *score = current_score;
+                    res = Some(mv);
+                    alpha = max(alpha, current_score);
+                }
+            } else {
+                score = Some(current_score);
+                res = Some(mv);
+                alpha = max(alpha, current_score);
+            }
+            if alpha >= beta {
+                break;
+            }
+        }
+        Solution::new(score, res)
+    }
 }

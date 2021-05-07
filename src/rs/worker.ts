@@ -1,6 +1,6 @@
 import { expose } from "comlink"
 import { AnyFunction } from "../util"
-import init, { movesFor, availableMoves, canEat, initializeBoard, minimax } from "./checkers/pkg/checkers-rs"
+import init, { movesFor, availableMoves, canEat, initializeBoard, minimax, alphabeta } from "./checkers/pkg/checkers-rs"
 import { RSWorkerProxy } from "./types"
 
 const ready = init("/checkers-rs.wasm").then(() => {})
@@ -22,7 +22,7 @@ const workerInterface: RSWorkerProxy = {
         if (algorithm === "minimax") {
             return minimax(board, player, searchDepth)
         } else {
-            throw new Error("Not implemented")
+            return alphabeta(board, player, searchDepth)
         }
     },
     ready,
