@@ -9,6 +9,7 @@
     },
     "files": [
         "src/swipl/worker.ts",
-        "src/js/worker.ts"
+        "src/js/worker.ts",
+        "src/rs/worker.ts"
     ]
 }

@@ -44,10 +44,10 @@ export interface GameLogicEngine {
     encodeBoard(board: GameBoard): Promise<GameBoard>
 }
 
-export type EngineType = "swipl" | "js"
+export type EngineType = "swipl" | "js" | "rs"
 
 export const isPiece = (cell: Cell): cell is Piece => cell !== "0" && cell !== "1"
 
 export const isSearchAlgorithm = (str: string): str is SearchAlgorithm => str === "minimax" || str === "alphabeta"
 
-export const isEngineType = (str: string): str is EngineType => str === "swipl" || str === "js"
+export const isEngineType = (str: string): str is EngineType => str === "swipl" || str === "js" || str === "rs"

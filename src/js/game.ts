@@ -1,5 +1,5 @@
 import * as comlink from "comlink"
-import { allocateArray, Tuple } from "../util"
+import { allocateArray, Disposable, Tuple } from "../util"
 import type { BoardRow, Cell, GameBoard, GameLogicEngine, Move } from "../common"
 import type { JSWorkerProxy, JSMove } from "./types"
 
@@ -83,15 +83,16 @@ export const initializedBoard: GameBoard = [
     offsetBoardRow("w"),
 ]
 
-export class JSGameLogic implements GameLogicEngine {
+export class JSGameLogic implements GameLogicEngine, Disposable {
     private moveAugmentations = new WeakMap<Move, GameBoard>()
-    private worker: comlink.Remote<JSWorkerProxy>
+    private proxy: comlink.Remote<JSWorkerProxy>
+    private worker: Worker
 
     ready = Promise.resolve()
 
     constructor(workerFile: string = "js-worker.js", workerName: string = "js-game-logic-worker") {
-        const worker = new Worker(workerFile, { name: workerName, type: "classic" })
-        this.worker = comlink.wrap(worker)
+        this.worker = new Worker(workerFile, { name: workerName, type: "classic" })
+        this.proxy = comlink.wrap(this.worker)
     }
 
     private simplifyMoves = (moves: JSMove[]) => moves.map(this.simplifyMove)
@@ -107,9 +108,9 @@ export class JSGameLogic implements GameLogicEngine {
     initializeBoard: GameLogicEngine["initializeBoard"] = () => Promise.resolve(initializedBoard)
 
     movesFor: GameLogicEngine["movesFor"] = (board, position) =>
-        this.worker.movesFor(board, position).then(this.simplifyMoves)
+        this.proxy.movesFor(board, position).then(this.simplifyMoves)
 
-    canEat: GameLogicEngine["canEat"] = (board, player) => this.worker.canEat(board, player)
+    canEat: GameLogicEngine["canEat"] = (board, player) => this.proxy.canEat(board, player)
 
     evaluateBestMove: GameLogicEngine["evaluateBestMove"] = async (
         board,
@@ -117,7 +118,7 @@ export class JSGameLogic implements GameLogicEngine {
         algorithm,
         searchDepth
     ) => {
-        const res = await this.worker.evaluateBestMove(board, player, algorithm, searchDepth)
+        const res = await this.proxy.evaluateBestMove(board, player, algorithm, searchDepth)
         if (!res) return undefined
         const [move, score] = res
         return [this.simplifyMove(move), score]
@@ -133,5 +134,12 @@ export class JSGameLogic implements GameLogicEngine {
         return Promise.resolve(board)
     }
 
-    encodeBoard: GameLogicEngine["encodeBoard"] = Promise.resolve
+    encodeBoard(board: GameBoard) {
+        return Promise.resolve(board)
+    }
+
+    dispose() {
+        this.proxy[comlink.releaseProxy]()
+        this.worker.terminate()
+    }
 }

@@ -7,6 +7,7 @@ export default {
         main: "./src/main.ts",
         "swipl-worker": "./src/swipl/worker.ts",
         "js-worker": "./src/js/worker.ts",
+        "rs-worker": "./src/rs/worker.ts",
         sw: "./src/sw.ts",
     },
     resolve: {

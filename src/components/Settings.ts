@@ -109,6 +109,9 @@ export default class Settings extends Controls {
                         <mwc-list-item value="swipl" ?selected=${backend === "swipl"}>
                             SWI-Prolog
                         </mwc-list-item>
+                        <mwc-list-item value="rs" ?selected=${backend === "rs"}>
+                            Rust
+                        </mwc-list-item>
                     </mwc-select>
 
                     <mwc-select

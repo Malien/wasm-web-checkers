@@ -1,4 +1,19 @@
 import { customElement, html, LitElement, query, state } from "lit-element"
+import type {
+    EngineType,
+    GameBoard,
+    GameLogicEngine,
+    Move,
+    Player,
+    Position,
+    SearchAlgorithm,
+} from "./common"
+import { JSGameLogic } from "./js"
+import { RSGameLogic } from "./rs"
+import { MoveCheckersEvent, SelectCheckersEvent } from "./components/Board"
+import { cmpPositions, Disposable } from "./util"
+import { MakePlayEvent } from "./components/Controls"
+import { ifDefined } from "./util/directives"
 
 import "@material/mwc-snackbar"
 import { Snackbar } from "@material/mwc-snackbar"
@@ -9,21 +24,6 @@ import {
     BackendChangeEvent,
     SearchDepthChangeEvent,
 } from "./components/Settings"
-
-import {
-    EngineType,
-    GameBoard,
-    GameLogicEngine,
-    Move,
-    Player,
-    Position,
-    SearchAlgorithm,
-} from "./common"
-import { JSGameLogic } from "./js"
-import { MoveCheckersEvent, SelectCheckersEvent } from "./components/Board"
-import { cmpPositions } from "./util"
-import { MakePlayEvent } from "./components/Controls"
-import { ifDefined } from "./util/directives"
 
 const emptyBoard: GameBoard = [
     ["0", "1", "0", "1", "0", "1", "0", "1"],
@@ -36,7 +36,7 @@ const emptyBoard: GameBoard = [
     ["1", "0", "1", "0", "1", "0", "1", "0"],
 ]
 
-async function initEngine(type: EngineType): Promise<GameLogicEngine> {
+async function initEngine(type: EngineType): Promise<GameLogicEngine & Disposable> {
     switch (type) {
         case "js":
             return new JSGameLogic()
@@ -44,6 +44,8 @@ async function initEngine(type: EngineType): Promise<GameLogicEngine> {
             const { SWIPLGameLogic } = await import("./swipl/game")
             return new SWIPLGameLogic()
         }
+        case "rs":
+            return new RSGameLogic()
     }
 }
 
@@ -65,9 +67,11 @@ async function measureWithResult<T>(block: () => T | Promise<T>) {
 export default class App extends LitElement {
     constructor() {
         super()
-        initEngine("js").then(async engine => {
+        initEngine(this.backend).then(async engine => {
             await engine.ready
+            console.log("engine ready")
             this.board = await engine.initializeBoard()
+            console.log("board", this.board)
             this.game = engine
         })
     }
@@ -79,13 +83,13 @@ export default class App extends LitElement {
     algorithm: SearchAlgorithm = "alphabeta"
 
     @state()
-    backend: EngineType = "js"
+    backend: EngineType = "rs"
 
     @state()
     searchDepth = 3
 
     @state()
-    game?: GameLogicEngine
+    game?: GameLogicEngine & Disposable
 
     @state()
     waiting = {
@@ -109,6 +113,7 @@ export default class App extends LitElement {
     snackbar!: Snackbar
 
     async reinitEngine(type: EngineType) {
+        this.game?.dispose()
         this.game = undefined
         this.moves = []
         this.origin = undefined
@@ -193,6 +198,9 @@ export default class App extends LitElement {
             waiting,
             took,
         } = this
+
+        console.log(!!board)
+
         return html`
             <checkers-board
                 id="board"

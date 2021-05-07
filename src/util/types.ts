@@ -1,7 +1,7 @@
 export type AnyFunction = (...args: any[]) => any
 export type ValuePromised<T> = T extends AnyFunction
     ? (...args: Parameters<T>) => Promise<ReturnType<T>>
-    : Promise<T>
+    : T extends Promise<any> ? T : Promise<T>
 export type CoverPromises<T> = { [K in keyof T]: ValuePromised<T[K]> }
 
 export type Tuple<T, N extends number> = N extends N
@@ -16,3 +16,7 @@ type _TupleOf<T, N extends number, R extends unknown[]> = R["length"] extends N
 export type OneArgFunction = (arg: any) => any
 
 export type Last<T extends any[]> = T extends [...any[], infer R] ? R : never
+
+export interface Disposable {
+    dispose(): void
+}
