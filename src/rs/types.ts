@@ -1,5 +1,5 @@
-import { GameBoard, Move, Player, Position, SearchAlgorithm } from "src/common"
-import { CoverPromises } from "src/util"
+import { GameBoard, Move, Player, Position, SearchAlgorithm } from "../common"
+import { CoverPromises } from "../util"
 
 export type RSMove = Move & {
     nextBoard: GameBoard
@@ -10,12 +10,12 @@ export type RSWorkerInterface = {
     initializeBoard(): GameBoard
     availableMoves(board: GameBoard, player: Player): RSMove[]
     movesFor(board: GameBoard, position: Position): RSMove[]
-    // evaluateBestMove(
-    //     board: GameBoard,
-    //     forPlayer: Player,
-    //     usingAlgorithm: SearchAlgorithm,
-    //     searchDepth: number
-    // ): [move: RSMove, score: number] | undefined
+    evaluateBestMove(
+        board: GameBoard,
+        forPlayer: Player,
+        usingAlgorithm: SearchAlgorithm,
+        searchDepth: number
+    ): [move: RSMove, score: number] | undefined
     canEat(board: GameBoard, player: Player): Position[]
 }
 

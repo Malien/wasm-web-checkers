@@ -25,6 +25,7 @@ dependencies = [
  "checkers-rs",
  "console_error_panic_hook",
  "js-sys",
+ "serde",
  "serde-wasm-bindgen",
  "wasm-bindgen",
  "wee_alloc",

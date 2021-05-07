@@ -257,7 +257,7 @@ function minimax(
     depth: number
 ): [move: JSMove | null, score: number] | undefined
 function minimax(board: GameBoard, player: Player, depth: number) {
-    if (depth == 0) {
+    if (depth === 0) {
         return [null, evaluateBoard(board)] as const
     }
 

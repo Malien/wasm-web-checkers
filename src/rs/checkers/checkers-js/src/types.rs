@@ -1,4 +1,5 @@
 use checkers_rs::{Board, Cell, Move, Player, Position, Row, Sizes};
+use serde::{Serialize, Deserialize};
 
 #[wasm_bindgen::prelude::wasm_bindgen(typescript_custom_section)]
 const TS_TYPES_STR: &'static str = r#"
@@ -13,6 +14,7 @@ type GameBoard = [Row, Row, Row, Row, Row, Row, Row, Row]
 type Position = [x: number, y: number]
 type RSMove = { from: Position, to: Position, nextBoard: GameBoard }
 type Player = "white" | "black"
+type Solution = [move: RSMove, score: number]
 "#;
 
 macro_rules! ts_type {
@@ -51,3 +53,8 @@ ts_type!(Position, TSPosition, "Position");
 ts_type!(Move, TSMove, "RSMove");
 
 ts_type!(Player, TSPlayer, "Player");
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct Solution(pub Move, pub i32);
+
+ts_type!(Solution, TSSolution, "Solution");

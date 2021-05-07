@@ -25,7 +25,7 @@ impl Default for Cell {
 
 impl Cell {
     pub fn is_piece(self) -> bool {
-        ((self as u8) >> 2) & 1 == 1
+        self.piece_bit() == 1
     }
 
     pub fn player_affiliation(self) -> Option<Player> {
@@ -61,6 +61,18 @@ impl Cell {
             None => false,
             Some(other) => other.is_enemy_to(player),
         }
+    }
+
+    pub(crate) fn piece_bit(self) -> u8 {
+        (self as u8 >> 2) & 1
+    }
+
+    pub(crate) fn queen_bit(self) -> u8 {
+        (self as u8 >> 1) & 1
+    }
+
+    pub(crate) fn color_bit(self) -> u8 {
+        self as u8 & 1
     }
 }
 

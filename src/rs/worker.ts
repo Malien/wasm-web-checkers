@@ -1,21 +1,7 @@
 import { expose } from "comlink"
 import { AnyFunction } from "../util"
-import init, { movesFor, availableMoves, canEat, initializeBoard } from "./checkers/pkg/checkers-rs"
-import { RSWorkerInterface, RSWorkerProxy } from "./types"
-
-// init("/checkers-rs.wasm").then(() => {
-//     console.log("sizes", sizes())
-//     const board = initializeBoard()
-//     console.log("initialized board", board)
-//     console.log("moves", movesFor(board, [2, 5]))
-//     // const position: Position = [2, 5]
-//     // const start = performance.now()
-//     // for (let i=0; i<10000; ++i) {
-//     //     movesFor(board, position)
-//     // }
-//     // console.log(performance.now() - start)
-//     console.log("availableMoves", availableMoves(board, "white"))
-// })
+import init, { movesFor, availableMoves, canEat, initializeBoard, minimax } from "./checkers/pkg/checkers-rs"
+import { RSWorkerProxy } from "./types"
 
 const ready = init("/checkers-rs.wasm").then(() => {})
 
@@ -31,6 +17,14 @@ const workerInterface: RSWorkerProxy = {
     availableMoves: readify(availableMoves),
     movesFor: readify(movesFor),
     canEat: readify(canEat),
+    async evaluateBestMove(board, player, algorithm, searchDepth) {
+        await ready
+        if (algorithm === "minimax") {
+            return minimax(board, player, searchDepth)
+        } else {
+            throw new Error("Not implemented")
+        }
+    },
     ready,
 }
 

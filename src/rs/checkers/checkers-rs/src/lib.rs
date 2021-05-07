@@ -4,6 +4,7 @@ pub mod types;
 use crate::game::moves::moves;
 use game::moves::{chain_eat_moves, eat_moves};
 pub use types::*;
+pub use game::solution::*;
 
 pub fn moves_for(board: Board, position: Position) -> Option<Vec<Move>> {
     let piece = board.cell_at(position).into_piece()?;
@@ -92,4 +93,16 @@ pub fn available_moves(board: Board, player: Player) -> impl Iterator<Item = Mov
         moves: player_positions(board, player)
             .flat_map(move |(position, piece)| moves(board, position, piece)),
     }
+}
+
+pub fn has_moves(board: Board, player: Player) -> bool {
+    for (position, piece) in player_positions(board, player) {
+        if moves(board, position, piece).next().is_some() {
+            return true;
+        }
+        if eat_moves(board, position, piece).next().is_some() {
+            return true;
+        }
+    }
+    false
 }

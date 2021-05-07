@@ -101,11 +101,10 @@ export class RSGameLogic implements GameLogicEngine, Disposable {
         algorithm,
         searchDepth
     ) => {
-        throw new Error("Not implemented")
-        // const res = await this.worker.evaluateBestMove(board, player, algorithm, searchDepth)
-        // if (!res) return undefined
-        // const [move, score] = res
-        // return [this.simplifyMove(move), score]
+        const res = await this.proxy.evaluateBestMove(board, player, algorithm, searchDepth)
+        if (!res) return undefined
+        const [move, score] = res
+        return [this.simplifyMove(move), score]
     }
 
     nextBoard: GameLogicEngine["nextBoard"] = move => {
