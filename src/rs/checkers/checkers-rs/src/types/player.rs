@@ -23,12 +23,4 @@ impl Player {
     pub fn is_enemy_to(self, other: Player) -> bool {
         self != other
     }
-
-    pub fn is_minimizing(self) -> bool {
-        self == Player::Black
-    }
-
-    pub fn is_maximizing(self) -> bool {
-        self == Player::White
-    }
 }

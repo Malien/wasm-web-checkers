@@ -147,7 +147,7 @@ export default class App extends LitElement {
             const [move, score] = play
             console.log("score", score)
             this.board = await game.nextBoard(move)
-            this.canEat = await calculateCanEat(game, board)
+            this.canEat = await calculateCanEat(game, this.board)
         })
     }
 

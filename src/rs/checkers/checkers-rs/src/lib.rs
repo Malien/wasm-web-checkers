@@ -49,10 +49,6 @@ pub fn can_eat(board: Board, player: Player) -> impl Iterator<Item = Position> {
         .map(|(position, _)| position)
 }
 
-// fn all_eats(board: Board, player: Player) {
-//     player_positions(board, player).flat_map(|(position, piece)| )
-// }
-
 struct AvailableMovesIter<E, M> {
     had_eats: bool,
     eats: Option<E>,
