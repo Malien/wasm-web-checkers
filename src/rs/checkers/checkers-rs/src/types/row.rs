@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter, Write};
+
 use super::Cell;
 use serde::{Deserialize, Serialize};
 
@@ -17,5 +19,15 @@ impl<'a> IntoIterator for &'a Row {
     type IntoIter = std::slice::Iter<'a, Cell>;
     fn into_iter(self) -> Self::IntoIter {
         self.0.iter()
+    }
+}
+
+impl Display for Row {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        for cell in self {
+            cell.fmt(f)?;
+            f.write_char(' ')?;
+        }
+        Ok(())
     }
 }

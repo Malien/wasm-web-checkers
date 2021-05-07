@@ -1,5 +1,4 @@
 import path from "path"
-import webpack from "webpack"
 import CopyPlugin from "copy-webpack-plugin"
 
 export default {
@@ -10,6 +9,7 @@ export default {
         "js-worker": "./src/js/worker.ts",
         "rs-worker": "./src/rs/worker.ts",
         sw: "./src/sw.ts",
+        benchmark: "./src/benchmark.ts"
     },
     resolve: {
         extensions: [".ts", ".tsx", ".js", ".jsx"],
@@ -50,6 +50,7 @@ export default {
         new CopyPlugin({
             patterns: [
                 "public/index.html",
+                "public/benchmark.html",
                 "public/manifest.json",
                 "public/icon@1x.png",
                 "public/icon@1.5x.png",

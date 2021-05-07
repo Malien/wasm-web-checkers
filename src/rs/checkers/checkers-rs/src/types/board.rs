@@ -1,6 +1,6 @@
 use super::{promote, Cell, Position, Row};
 use serde::{Deserialize, Serialize};
-use std::usize;
+use std::{fmt::{Display, Formatter, Write}, usize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Board(pub [Row; 8]);
@@ -124,6 +124,16 @@ impl Default for Board {
                 Cell::White,
             ]),
         ])
+    }
+}
+
+impl Display for Board {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        for row in self {
+            row.fmt(f)?;
+            f.write_char('\n')?;
+        }
+        Ok(())
     }
 }
 

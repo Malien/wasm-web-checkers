@@ -11,7 +11,7 @@ import type {
 import { JSGameLogic } from "./js"
 import { RSGameLogic } from "./rs"
 import { MoveCheckersEvent, SelectCheckersEvent } from "./components/Board"
-import { cmpPositions, Disposable } from "./util"
+import { cmpPositions, Disposable, measureWithResult } from "./util"
 import { MakePlayEvent } from "./components/Controls"
 import { ifDefined } from "./util/directives"
 
@@ -57,12 +57,6 @@ async function calculateCanEat(game: GameLogicEngine, board: GameBoard): Promise
     return [...canEatWhite, ...canEatBlack].map(([x, y]) => [x, y])
 }
 
-async function measureWithResult<T>(block: () => T | Promise<T>) {
-    const start = performance.now()
-    const res = await block()
-    return [res, performance.now() - start] as const
-}
-
 @customElement("checkers-app")
 export default class App extends LitElement {
     constructor() {
@@ -83,7 +77,7 @@ export default class App extends LitElement {
     algorithm: SearchAlgorithm = "alphabeta"
 
     @state()
-    backend: EngineType = "rs"
+    backend: EngineType = "js"
 
     @state()
     searchDepth = 3

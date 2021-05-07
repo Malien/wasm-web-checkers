@@ -92,12 +92,6 @@ pub fn minimax(board: TSBoard, player: TSPlayer, depth: u8) -> Option<TSSolution
 
 #[wasm_bindgen]
 pub fn alphabeta(board: TSBoard, player: TSPlayer, depth: u8) -> Option<TSSolution> {
-    Solution::from_checkers(checkers_rs::alphabeta(
-        board.into(),
-        player.into(),
-        i32::MIN,
-        i32::MAX,
-        depth,
-    ))
-    .map(TSSolution::from)
+    Solution::from_checkers(checkers_rs::alphabeta(board.into(), player.into(), depth))
+        .map(TSSolution::from)
 }

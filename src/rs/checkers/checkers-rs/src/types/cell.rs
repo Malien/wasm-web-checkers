@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter, Write};
+
 use super::{Piece, Player};
 use serde::{Deserialize, Serialize};
 
@@ -81,5 +83,18 @@ pub fn promote(y: u8, cell: Cell) -> Cell {
         (7, Cell::BlackPiece) => Cell::BlackQueen,
         (0, Cell::WhitePiece) => Cell::WhiteQueen,
         _ => cell,
+    }
+}
+
+impl Display for Cell {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_char(match self {
+            Cell::White => '▢',
+            Cell::Black => '◼',
+            Cell::WhitePiece => '♙',
+            Cell::BlackPiece => '♟',
+            Cell::WhiteQueen => '♔',
+            Cell::BlackQueen => '♚'
+        })
     }
 }

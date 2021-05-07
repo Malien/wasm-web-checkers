@@ -3,6 +3,7 @@ use std::cmp::{max, min};
 use super::evaluate::Evaluate;
 use crate::{Board, Move, Player};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Solution {
     NoMoves,
     Score(i32),
@@ -66,55 +67,63 @@ fn best_move(
     Solution::new(score, res)
 }
 
-pub fn alphabeta(board: Board, player: Player, mut alpha: i32, mut beta: i32, depth: u8) -> Solution {
-    if depth == 0 {
-        return Solution::Score(board.evaluate());
-    }
+pub fn alphabeta(board: Board, player: Player, depth: u8) -> Solution {
+    fn inner(board: Board, player: Player, mut alpha: i32, mut beta: i32, depth: u8) -> Solution {
+        if depth == 0 {
+            return Solution::Score(board.evaluate());
+        }
 
-    let moves = crate::available_moves(board, player);
-    if player == Player::Black {
-        let mut score = None;
-        let mut res = None;
-        for mv in moves {
-            let next = alphabeta(mv.next_board, player.next(), alpha, beta, depth - 1);
-            let current_score = next.score().unwrap_or_else(|| mv.next_board.evaluate());
-            if let Some(ref mut score) = score {
-                if current_score < *score {
-                    *score = current_score;
+        let moves = crate::available_moves(board, player);
+        if player == Player::Black {
+            let mut score = None;
+            let mut res = None;
+            for mv in moves {
+                let next = inner(mv.next_board, player.next(), alpha, beta, depth - 1);
+                let current_score = next.score().unwrap_or_else(|| mv.next_board.evaluate());
+                if let Some(ref mut score) = score {
+                    if current_score < *score {
+                        *score = current_score;
+                        res = Some(mv);
+                        beta = min(beta, current_score);
+                    }
+                } else {
+                    score = Some(current_score);
                     res = Some(mv);
                     beta = min(beta, current_score);
                 }
-            } else {
-                score = Some(current_score);
-                res = Some(mv);
-                beta = max(beta, current_score);
+                if beta <= alpha {
+                    println!("Cut");
+                    break;
+                }
             }
-            if beta <= alpha {
-                break;
-            }
-        }
-        Solution::new(score, res)
-    } else {
-        let mut score = None;
-        let mut res = None;
-        for mv in moves {
-            let next = alphabeta(mv.next_board, player.next(), alpha, beta, depth - 1);
-            let current_score = next.score().unwrap_or_else(|| mv.next_board.evaluate());
-            if let Some(ref mut score) = score {
-                if current_score < *score {
-                    *score = current_score;
+            println!("alpha={}\tbeta={}\tdepth={}\tplayer={:?}", alpha, beta, depth, player);
+            Solution::new(score, res)
+        } else {
+            let mut score = None;
+            let mut res = None;
+            for mv in moves {
+                let next = inner(mv.next_board, player.next(), alpha, beta, depth - 1);
+                let current_score = next.score().unwrap_or_else(|| mv.next_board.evaluate());
+                if let Some(ref mut score) = score {
+                    if current_score < *score {
+                        *score = current_score;
+                        res = Some(mv);
+                        alpha = max(alpha, current_score);
+                    }
+                } else {
+                    score = Some(current_score);
                     res = Some(mv);
                     alpha = max(alpha, current_score);
                 }
-            } else {
-                score = Some(current_score);
-                res = Some(mv);
-                alpha = max(alpha, current_score);
+                if alpha >= beta {
+                    println!("Cut");
+                    break;
+                }
             }
-            if alpha >= beta {
-                break;
-            }
+            println!("alpha={}\tbeta={}\tdepth={}\tplayer={:?}", alpha, beta, depth, player);
+            Solution::new(score, res)
         }
-        Solution::new(score, res)
     }
+
+    inner(board, player, i32::MIN, i32::MAX, depth)
 }
