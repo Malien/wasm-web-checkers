@@ -139,6 +139,6 @@ impl<'a> IntoIterator for &'a Board {
     type Item = &'a Row;
     type IntoIter = std::slice::Iter<'a, Row>;
     fn into_iter(self) -> Self::IntoIter {
-        self.0.into_iter()
+        self.0.iter()
     }
 }

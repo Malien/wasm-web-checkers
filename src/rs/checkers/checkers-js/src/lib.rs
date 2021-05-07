@@ -1,5 +1,5 @@
 mod types;
-use checkers_rs::{Board, Move, Player, Position, Sizes};
+use checkers_rs::{Board, Move, Position, Sizes};
 use types::{TSBoard, TSMove, TSPlayer, TSPosition, TSSizes};
 
 #[cfg(feature = "wee_alloc")]

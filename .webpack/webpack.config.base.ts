@@ -1,4 +1,5 @@
 import path from "path"
+import webpack from "webpack"
 import CopyPlugin from "copy-webpack-plugin"
 
 export default {
@@ -19,6 +20,24 @@ export default {
     },
     module: {
         rules: [
+            // For some reason sometimes including import.meta.url
+            // in some packages triggers webpack to include it's 
+            // "jsonp chunk loading" module to resolve import.meta.url.
+            // This relies on document to be defined 
+            // WHICH IS NOT THE CASE IN WORKERS! HOW WEBPACK?!
+            // HOW THE FUCK YOU MANAGED TO SCREW THIS UP???
+            //
+            // So yeah, I'm just replacing import.meta.url before
+            // webpack manages to do it's shitty thing.
+            // If you rely on this behavior... Too bad.
+            {
+                test: /checkers-rs.js$/,
+                loader: "string-replace-loader",
+                options: {
+                    search: "import.meta.url",
+                    replace: "self.location.href"
+                }
+            },
             {
                 test: /\.tsx?$/,
                 use: "ts-loader",

@@ -8,8 +8,8 @@ fn main() {
         None => {
             println!("Cell {:?} is not a piece", board.cell_at(position));
         }
-        Some(iter) => {
-            let mvs: Vec<_> = iter.map(|mv| mv.to).collect();
+        Some(moves) => {
+            let mvs: Vec<_> = moves.iter().map(|mv| mv.to).collect();
             println!("Moves: {:?}", mvs);
         }
     }

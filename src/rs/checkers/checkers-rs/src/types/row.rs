@@ -16,6 +16,6 @@ impl<'a> IntoIterator for &'a Row {
     type Item = &'a Cell;
     type IntoIter = std::slice::Iter<'a, Cell>;
     fn into_iter(self) -> Self::IntoIter {
-        self.0.into_iter()
+        self.0.iter()
     }
 }

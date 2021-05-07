@@ -8,7 +8,7 @@ pub use types::*;
 pub fn moves_for(board: Board, position: Position) -> Option<Vec<Move>> {
     let piece = board.cell_at(position).into_piece()?;
     if player_can_make_eat_move(board, piece.player_affiliation()) {
-        Some(eat_moves(board, position, piece).collect())
+        Some(chain_eat_moves(board, position, piece).collect())
     } else {
         Some(moves(board, position, piece).collect())
     }

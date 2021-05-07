@@ -1842,9 +1842,6 @@ chalk@^4.1.0:
     ansi-styles "^4.1.0"
     supports-color "^7.1.0"
 
-"checkers-rs@file:./src/rs/checkers/pkg":
-  version "0.1.0"
-
 "chokidar@>=3.0.0 <4.0.0":
   version "3.5.1"
   resolved "https://registry.yarnpkg.com/chokidar/-/chokidar-3.5.1.tgz#ee9ce7bbebd2b79f49f304799d5468e31e14e68a"
@@ -5560,6 +5557,14 @@ static-extend@^0.1.1:
   version "1.5.0"
   resolved "https://registry.yarnpkg.com/statuses/-/statuses-1.5.0.tgz#161c7dac177659fd9811f43771fa99381478628c"
   integrity sha1-Fhx9rBd2Wf2YEfQ3cfqZOBR4Yow=
+
+string-replace-loader@^3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/string-replace-loader/-/string-replace-loader-3.0.1.tgz#a899de524a4dfaa296e4be73f1667de150bed8d2"
+  integrity sha512-G6UD9HX1XaKXnWpKgNHPVc/pYYLtP8+UWfORY5n3GTLSUNUo2hU2ABBnC9B3hg7ATWVSIGTisiP8zGq1DlvTbg==
+  dependencies:
+    loader-utils "^2.0.0"
+    schema-utils "^3.0.0"
 
 string-width@^3.0.0, string-width@^3.1.0:
   version "3.1.0"
