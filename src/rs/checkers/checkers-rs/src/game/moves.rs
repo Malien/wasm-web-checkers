@@ -1,3 +1,4 @@
+use std::collections::VecDeque;
 use crate::types::{piece::Piece, Board, Move, Player, Position};
 
 use super::{
@@ -134,5 +135,31 @@ pub fn moves(board: Board, from: Position, piece: Piece) -> impl Iterator<Item =
         from,
         piece,
         seq: rules,
+    }
+}
+
+pub struct ChainEatsIter {
+    piece: Piece,
+    queue: VecDeque<Move>
+}
+
+impl Iterator for ChainEatsIter {
+    type Item = Move;
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            let mv = self.queue.pop_front()?;
+            let prior_len = self.queue.len();
+            self.queue.extend(eat_moves(mv.next_board, mv.to, self.piece));
+            if self.queue.len() == prior_len {
+                return Some(mv);
+            }
+        }
+    }
+}
+
+pub fn chain_eat_moves(board: Board, from: Position, piece: Piece) -> ChainEatsIter {
+    ChainEatsIter {
+        piece,
+        queue: eat_moves(board, from, piece).collect()
     }
 }

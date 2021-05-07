@@ -1,6 +1,6 @@
 mod types;
-use checkers_rs::{Board, Move, Position, Sizes};
-use types::{TSBoard, TSMove, TSPosition, TSSizes};
+use checkers_rs::{Board, Move, Player, Position, Sizes};
+use types::{TSBoard, TSMove, TSPlayer, TSPosition, TSSizes};
 
 #[cfg(feature = "wee_alloc")]
 #[global_allocator]
@@ -14,6 +14,9 @@ use wasm_bindgen::prelude::*;
 extern "C" {
     #[wasm_bindgen(extends=js_sys::Array, typescript_type="RSMove[]")]
     pub type TSMoveArray;
+
+    #[wasm_bindgen(extends=js_sys::Array, typescript_type="Position[]")]
+    pub type TSPositionArray;
 }
 
 impl FromIterator<Move> for TSMoveArray {
@@ -35,6 +38,25 @@ impl Default for TSMoveArray {
     }
 }
 
+impl FromIterator<Position> for TSPositionArray {
+    fn from_iter<T: IntoIterator<Item = Position>>(iter: T) -> Self {
+        let array: js_sys::Array = iter.into_iter().map(TSPosition::from).collect();
+        JsValue::from(array).into()
+    }
+}
+
+impl TSPositionArray {
+    fn new() -> Self {
+        JsValue::from(js_sys::Array::new()).into()
+    }
+}
+
+impl Default for TSPositionArray {
+    fn default() -> Self {
+        TSPositionArray::new()
+    }
+}
+
 #[wasm_bindgen]
 pub fn sizes() -> TSSizes {
     Sizes::new().into()
@@ -47,10 +69,17 @@ pub fn initialize_board() -> TSBoard {
 
 #[wasm_bindgen(js_name = "movesFor")]
 pub fn moves_for(board: TSBoard, position: TSPosition) -> TSMoveArray {
-    let board: Board = board.into();
-    let position: Position = position.into();
-
-    checkers_rs::moves_for(board, position)
-        .map(Iterator::collect)
+    checkers_rs::moves_for(board.into(), position.into())
+        .map(TSMoveArray::from_iter)
         .unwrap_or_default()
+}
+
+#[wasm_bindgen(js_name = "canEat")]
+pub fn can_eat(board: TSBoard, player: TSPlayer) -> TSPositionArray {
+    checkers_rs::can_eat(board.into(), player.into()).collect()
+}
+
+#[wasm_bindgen(js_name = "availableMoves")]
+pub fn available_moves(board: TSBoard, player: TSPlayer) -> TSMoveArray {
+    checkers_rs::available_moves(board.into(), player.into()).collect()
 }

@@ -126,3 +126,19 @@ impl Default for Board {
         ])
     }
 }
+
+impl IntoIterator for Board {
+    type Item = Row;
+    type IntoIter = std::array::IntoIter<Row, 8>;
+    fn into_iter(self) -> Self::IntoIter {
+        std::array::IntoIter::new(self.0)
+    }
+}
+
+impl<'a> IntoIterator for &'a Board {
+    type Item = &'a Row;
+    type IntoIter = std::slice::Iter<'a, Row>;
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}

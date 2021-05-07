@@ -1,4 +1,4 @@
-use checkers_rs::types::{Board, Cell, Move, Position, Row, Sizes};
+use checkers_rs::{Board, Cell, Move, Player, Position, Row, Sizes};
 
 #[wasm_bindgen::prelude::wasm_bindgen(typescript_custom_section)]
 const TS_TYPES_STR: &'static str = r#"
@@ -12,6 +12,7 @@ interface Sizes{
 type GameBoard = [Row, Row, Row, Row, Row, Row, Row, Row]
 type Position = [x: number, y: number]
 type RSMove = { from: Position, to: Position, nextBoard: GameBoard }
+type Player = "white" | "black"
 "#;
 
 macro_rules! ts_type {
@@ -48,3 +49,5 @@ ts_type!(Board, TSBoard, "GameBoard");
 ts_type!(Position, TSPosition, "Position");
 
 ts_type!(Move, TSMove, "RSMove");
+
+ts_type!(Player, TSPlayer, "Player");

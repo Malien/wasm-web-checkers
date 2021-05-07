@@ -1,9 +1,14 @@
 use num_enum::UnsafeFromPrimitive;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, UnsafeFromPrimitive)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, UnsafeFromPrimitive, Serialize, Deserialize,
+)]
 #[repr(u8)]
 pub enum Player {
+    #[serde(rename = "white")]
     White = 0,
+    #[serde(rename = "black")]
     Black = 1,
 }
 

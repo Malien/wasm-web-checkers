@@ -37,7 +37,7 @@ export default {
                 "public/icon@3x.png",
                 "public/icon@4x.png",
                 "src/swipl/main.pl",
-                { from: "src/rs/checkers/pkg/checkers_rs_bg.wasm", to: "checkers-rs.wasm" },
+                { from: "src/rs/checkers/pkg/checkers-rs_bg.wasm", to: "checkers-rs.wasm" },
                 { from: "swipl-wasm/dist", to: "swipl-wasm" },
             ],
         }),

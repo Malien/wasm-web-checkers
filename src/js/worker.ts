@@ -182,8 +182,9 @@ function* validMoves(handlers: MoveHandler[], board: GameBoard, position: Positi
 
 function* chainEatMoves(board: GameBoard, position: Position, piece: Piece): Generator<JSMove> {
     for (const move of validMoves(eatHandlers, board, position, piece)) {
-        const hadMore = false
+        let hadMore = false
         for (const chainMove of chainEatMoves(move.nextBoard, move.to, piece)) {
+            hadMore = true
             yield chainMove
         }
         if (!hadMore) yield move

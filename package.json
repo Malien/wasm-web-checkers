@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "NODE_ENV=development TS_NODE_PROJECT=.webpack/webpack.tsconfig.json webpack serve -c .webpack/webpack.config.dev.ts --port 5000",
     "build": "NODE_ENV=production TS_NODE_PROJECT=.webpack/webpack.tsconfig.json webpack -c .webpack/webpack.config.prod.ts",
-    "build:rs": "cd src/rs/checkers; wasm-pack build --target web"
+    "build:rs": "cd src/rs/checkers; wasm-pack build checkers-js --target web -d ../pkg --out-name checkers-rs"
   },
   "devDependencies": {
     "@types/copy-webpack-plugin": "^6.4.0",

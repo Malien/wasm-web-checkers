@@ -12,6 +12,12 @@ pub struct Position {
     pub y: u8,
 }
 
+impl Position {
+    pub fn new(x: u8, y: u8) -> Self {
+        Self { x, y }
+    }
+}
+
 impl Serialize for Position {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
