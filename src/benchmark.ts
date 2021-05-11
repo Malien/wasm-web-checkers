@@ -1,39 +1,172 @@
-import { GameLogicEngine, SearchAlgorithm } from "./common"
-import { JSGameLogic } from "./js"
-import { RSGameLogic } from "./rs"
-import { SWIPLGameLogic } from "./swipl"
+import { EngineType, GameLogicEngine, SearchAlgorithm } from "./common"
+import displayNames from "./displayNames"
+import initEngine from "./initEngine"
 import measureWithResult from "./util/measureWithResult"
 
-async function test(engine: GameLogicEngine, algorithm: SearchAlgorithm, from: number = 2, to: number = 6, iterations: number = 10) {
-    await engine.ready
+const textElement = <Tag extends keyof HTMLElementTagNameMap>(
+    tag: Tag,
+    innerText: string
+): HTMLElementTagNameMap[Tag] => Object.assign(document.createElement(tag), { innerText })
+
+const th = textElement.bind(this, "th")
+const td = textElement.bind(this, "td")
+
+function resultsTable(): HTMLTableElement {
+    const table = document.createElement("table")
+    const header = document.createElement("tr")
+    header.append(
+        th("Engine"),
+        th("Algorithm"),
+        th("Iteration"),
+        th("Search Depth"),
+        th("Time took")
+    )
+    table.append(header)
+    return table
+}
+
+function resultRow({
+    engineType,
+    algorithm,
+    iteration,
+    searchDepth,
+    time,
+}: TestResult): HTMLTableRowElement {
+    const row = document.createElement("tr")
+    row.append(
+        td(engineType),
+        td(algorithm),
+        td(String(iteration)),
+        td(String(searchDepth)),
+        td(String(time))
+    )
+    return row
+}
+
+interface TestResult {
+    engineType: EngineType
+    algorithm: SearchAlgorithm
+    iteration: number
+    searchDepth: number
+    time: number
+}
+
+async function* test(
+    engine: GameLogicEngine,
+    engineType: EngineType,
+    algorithm: SearchAlgorithm,
+    { from = 2, to = 6, iterations = 10 }: RunRequirement
+): AsyncGenerator<TestResult> {
     const board = await engine.initializeBoard()
-    for (let i = from; i <= to; ++i) {
-        for (let j = 0; j < iterations; ++j) {
+    for (let searchDepth = from; searchDepth <= to; ++searchDepth) {
+        for (let iteration = 0; iteration < iterations; ++iteration) {
             const [, time] = await measureWithResult(
-                async () => await engine.evaluateBestMove(board, "white", algorithm, i)
+                async () => await engine.evaluateBestMove(board, "white", algorithm, searchDepth)
             )
-            console.log(`${algorithm}(${i}): ${time}ms`)
+            yield { time, iteration, searchDepth, algorithm, engineType }
         }
     }
 }
 
-async function testSuite() {
-    const jsEngine = new JSGameLogic()
-    console.log("Measuring JS performance...")
-    await test(jsEngine, "minimax", 2, 6, 5)
-    await test(jsEngine, "alphabeta", 2, 8, 5)
-    // console.log("Measuring SWI-Prolog performance...")
-    // await test(new SWIPLGameLogic())
-    console.log("Measuring Rust Performance...")
-    const rsEngine = new RSGameLogic()
-    await test(rsEngine, "minimax", 2, 6, 3)
-    await test(rsEngine, "alphabeta", 2, 8, 3)
+async function printTests(results: AsyncGenerator<TestResult>) {
+    const table = resultsTable()
+    document.body.append(table)
+    for await (const result of results) {
+        const row = resultRow(result)
+        table.append(row)
+    }
 }
 
-testSuite()
+interface RunRequirement {
+    from: number
+    to: number
+    iterations: number
+}
 
-// ;(async () => {
-//     const engine = new JSGameLogic()
-//     const board = await engine.initializeBoard()
-//     await engine.evaluateBestMove(board, "white", "alphabeta", 3)
-// })()
+interface TestRequirement {
+    type: EngineType
+    minimax: RunRequirement
+    alphabeta: RunRequirement
+}
+
+const testRequirements: TestRequirement[] = [
+    {
+        type: "js",
+        minimax: {
+            from: 2,
+            to: 7,
+            iterations: 8,
+        },
+        alphabeta: {
+            from: 2,
+            to: 12,
+            iterations: 8,
+        },
+    },
+    {
+        type: "swipl",
+        minimax: {
+            from: 2,
+            to: 4,
+            iterations: 5,
+        },
+        alphabeta: {
+            from: 2,
+            to: 6,
+            iterations: 5,
+        },
+    },
+    {
+        type: "rs",
+        minimax: {
+            from: 2,
+            to: 7,
+            iterations: 5,
+        },
+        alphabeta: {
+            from: 2,
+            to: 12,
+            iterations: 5,
+        },
+    },
+]
+
+async function testRequirement({ type, minimax, alphabeta }: TestRequirement) {
+    const engine = await initEngine(type)
+    await engine.ready
+    console.log(`Measuring ${displayNames[type]} performance...`)
+    await printTests(test(engine, type, "minimax", minimax))
+    await printTests(test(engine, type, "alphabeta", alphabeta))
+    engine.dispose()
+}
+
+class NoSuchEngine extends Error {
+    constructor(public engine: string) {
+        super(`No such engine ${engine}`)
+    }
+}
+
+async function testSuite(engine?: string) {
+    if (engine) {
+        const requirement = testRequirements.find(({ type }) => type === engine)
+        if (requirement) await testRequirement(requirement)
+        else throw new NoSuchEngine(engine)
+    } else {
+        for (const requirement of testRequirements) {
+            await testRequirement(requirement)
+        }
+    }
+}
+
+async function runTests() {
+    try {
+        const engine = new URLSearchParams(location.search).get("engine") || undefined
+        await testSuite(engine)
+        document.body.append(document.createTextNode("✅ done!"))
+    } catch (e) {
+        document.body.append(document.createTextNode(`❌ ${e.message || "Unknown error"}`))
+        console.error(e)
+    }
+}
+
+setTimeout(runTests, 3000)

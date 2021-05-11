@@ -24,6 +24,7 @@ import {
     BackendChangeEvent,
     SearchDepthChangeEvent,
 } from "./components/Settings"
+import initEngine from "./initEngine"
 
 const emptyBoard: GameBoard = [
     ["0", "1", "0", "1", "0", "1", "0", "1"],
@@ -35,19 +36,6 @@ const emptyBoard: GameBoard = [
     ["0", "1", "0", "1", "0", "1", "0", "1"],
     ["1", "0", "1", "0", "1", "0", "1", "0"],
 ]
-
-async function initEngine(type: EngineType): Promise<GameLogicEngine & Disposable> {
-    switch (type) {
-        case "js":
-            return new JSGameLogic()
-        case "swipl": {
-            const { SWIPLGameLogic } = await import("./swipl/game")
-            return new SWIPLGameLogic()
-        }
-        case "rs":
-            return new RSGameLogic()
-    }
-}
 
 async function calculateCanEat(game: GameLogicEngine, board: GameBoard): Promise<Position[]> {
     const [canEatWhite, canEatBlack] = await Promise.all([

@@ -7,6 +7,7 @@ import { TextField } from "@material/mwc-textfield"
 import "@material/mwc-snackbar"
 import Controls from "./Controls"
 import { ifDefined } from "../util/directives"
+import displayNames from "../displayNames"
 
 export class BackendChangeEvent extends Event {
     constructor(public newValue: EngineType) {
@@ -105,13 +106,13 @@ export default class Settings extends Controls {
                         ?disabled=${disabled}
                         @selected=${handleBackend}
                     >
-                        <mwc-list-item value="js" ?selected=${backend === "js"}> JS </mwc-list-item>
-                        <mwc-list-item value="swipl" ?selected=${backend === "swipl"}>
-                            SWI-Prolog
-                        </mwc-list-item>
-                        <mwc-list-item value="rs" ?selected=${backend === "rs"}>
-                            Rust
-                        </mwc-list-item>
+                        ${Object.entries(displayNames).map(
+                            ([engine, name]) => html`
+                                <mwc-list-item value=${engine} ?selected=${backend === engine}
+                                    >${name}</mwc-list-item
+                                >
+                            `
+                        )}
                     </mwc-select>
 
                     <mwc-select
