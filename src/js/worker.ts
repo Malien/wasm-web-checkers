@@ -1,79 +1,45 @@
 import { expose } from "comlink"
-import { allocateArray } from "../util"
-import type {
-    Cell,
-    GameBoard,
-    Position,
-    Player,
-    Piece,
-    ValidPosition,
-    SearchAlgorithm,
-} from "../common"
-import type { JSWorkerInterface, JSMove } from "./types"
+import { SearchAlgorithm } from "../common"
+import { JSWorkerInterface, JSMove, Cell, Player, Piece, GameBoard, Position } from "./common"
 
-const boundCheck = (pos: Position): pos is ValidPosition => {
-    const [x, y] = pos
-    return x >= 0 && x < 8 && y >= 0 && y < 8
-}
 
-const boundsException = ([x, y]: Position) => new Error(`Position [${x}, ${y}] is out of bounds`)
+const pieceBit = (cell: Cell) => (cell >> 2) & 1
+const queenBit = (cell: Cell) => (cell >> 1) & 1
+const colorBit = (cell: Cell) => cell & 1
+const cellToPiece = (cell: Cell) => (cell & 0b011) as Piece
+const cellColor = (cell: Cell) => colorBit(cell) as Player
 
-const elementAt = (board: GameBoard, pos: Position) => {
-    if (boundCheck(pos)) {
-        const [x, y] = pos
-        return board[y][x]
-    } else throw boundsException(pos)
-}
+const piecePlayer = (piece: Piece) => (piece & 1) as Player
 
-const copyBoard = (board: GameBoard) =>
-    allocateArray(8).map((_, idx) => [...board[idx]!]) as GameBoard
+const cellAt = (board: GameBoard, { x, y }: Position) => board[y * 8 + x] as Cell
+
+const copyBoard = (board: GameBoard) => new Uint8Array(board) as GameBoard
 
 // Modifies board object
-const replace = (board: GameBoard, pos: Position, cell: Cell) => {
-    if (boundCheck(pos)) {
-        const [x, y] = pos
-        board[y][x] = cell
-    } else throw boundsException(pos)
+const replace = (board: GameBoard, { x, y }: Position, cell: Cell) => {
+    board[y * 8 + x] = cell
 }
 
-function promote(y: 7, piece: "b"): "bq"
-function promote(y: number, piece: "b"): "b" | "bq"
-function promote(y: 0, piece: "w"): "wq"
-function promote(y: number, piece: "w"): "w" | "wq"
-function promote<C extends Cell>(y: number, piece: C): C
 function promote(y: number, piece: Cell) {
-    if (piece === "b" && y === 7) return "bq"
-    if (piece === "w" && y === 0) return "wq"
+    if (piece === Cell.BlackPiece && y === 7) return Cell.BlackQueen
+    if (piece === Cell.WhitePiece && y === 0) return Cell.WhiteQueen
     return piece
 }
 
 // Modified board object
-const remove = (fromBoard: GameBoard, pos: Position) => replace(fromBoard, pos, "1")
+const remove = (fromBoard: GameBoard, pos: Position) => replace(fromBoard, pos, Cell.Black)
 
 // Modified board object
 const move = (board: GameBoard, from: Position, to: Position) => {
-    replace(board, to, promote(to[1], elementAt(board, from)))
+    replace(board, to, promote(to.y, cellAt(board, from)))
     remove(board, from)
 }
 
-const playerAffiliationMap: Record<Piece, Player> = {
-    b: "black",
-    bq: "black",
-    w: "white",
-    wq: "white",
-}
-
-function playerAffiliation(piece: Piece): Player
-function playerAffiliation(cell: Cell): Player | undefined
-function playerAffiliation(cell: Cell): Player | undefined {
-    return playerAffiliationMap[cell as Piece]
-}
-
-const isOccupied = (board: GameBoard, pos: Position) => elementAt(board, pos) !== "1"
+const isOccupied = (board: GameBoard, pos: Position) => cellAt(board, pos) !== Cell.Black
 const isEnemy = (board: GameBoard, pos: Position, player: Player) => {
-    const otherPlayer = playerAffiliation(elementAt(board, pos))
-    if (!otherPlayer) return false
-    return player !== otherPlayer
+    const cell = cellAt(board, pos)
+    if (!pieceBit(cell)) return false
+    return player !== cellColor(cell)
 }
 
 type MoveHandler = (board: GameBoard, from: Position, piece: Piece) => JSMove | undefined
@@ -81,93 +47,103 @@ type MoveHandler = (board: GameBoard, from: Position, piece: Piece) => JSMove | 
 const add = (a: number, b: number) => a + b
 const subtract = (a: number, b: number) => a - b
 
-const ifPlayer = (isPlayer: Player, handler: MoveHandler): MoveHandler => (board, from, piece) => {
-    if (isEnemy(board, from, isPlayer)) return undefined
-    return handler(board, from, piece)
-}
+const ifPlayer =
+    (isPlayer: Player, handler: MoveHandler): MoveHandler =>
+    (board, from, piece) => {
+        if (isEnemy(board, from, isPlayer)) return undefined
+        return handler(board, from, piece)
+    }
 
-const ifPiece = (isPiece: Piece, handler: MoveHandler): MoveHandler => (board, from, piece) => {
-    if (piece !== isPiece) return undefined
-    return handler(board, from, piece)
-}
+const ifPiece =
+    (isPiece: Piece, handler: MoveHandler): MoveHandler =>
+    (board, from, piece) => {
+        if (piece !== isPiece) return undefined
+        return handler(board, from, piece)
+    }
 
-const ifCheckedPosition = (
-    check: (pos: Position) => boolean,
-    handler: MoveHandler
-): MoveHandler => (board, from, piece) => {
-    if (!check(from)) return undefined
-    return handler(board, from, piece)
-}
+const ifCheckedPosition =
+    (check: (pos: Position) => boolean, handler: MoveHandler): MoveHandler =>
+    (board, from, piece) => {
+        if (!check(from)) return undefined
+        return handler(board, from, piece)
+    }
 
-const eatHandler = (
-    xoffset: (a: number, b: number) => number,
-    yoffset: (a: number, b: number) => number
-): MoveHandler => (board, from, piece) => {
-    const [x, y] = from
-    const jumpOver: Position = [xoffset(x, 1), yoffset(y, 1)]
-    const to: Position = [xoffset(x, 2), yoffset(y, 2)]
-    const condition = isEnemy(board, jumpOver, playerAffiliation(piece)) && !isOccupied(board, to)
-    if (!condition) return undefined
+const eatHandler =
+    (
+        xoffset: (a: number, b: number) => number,
+        yoffset: (a: number, b: number) => number
+    ): MoveHandler =>
+    (board, from, piece) => {
+        const { x, y } = from
+        const jumpOver = { x: xoffset(x, 1), y: yoffset(y, 1) }
+        const to = { x: xoffset(x, 2), y: yoffset(y, 2) }
+        const condition = isEnemy(board, jumpOver, piecePlayer(piece)) && !isOccupied(board, to)
+        if (!condition) return undefined
 
-    const nextBoard = copyBoard(board)
-    move(nextBoard, from, to)
-    remove(nextBoard, jumpOver)
-    return { from, to, nextBoard }
-}
+        const nextBoard = copyBoard(board)
+        move(nextBoard, from, to)
+        remove(nextBoard, jumpOver)
+        return { from, to, nextBoard }
+    }
 
-const moveHandler = (
-    xoffset: (a: number, b: number) => number,
-    yoffset: (a: number, b: number) => number
-): MoveHandler => (board, from) => {
-    const [x, y] = from
-    const to: Position = [xoffset(x, 1), yoffset(y, 1)]
-    if (isOccupied(board, to)) return undefined
-    const nextBoard = copyBoard(board)
-    move(nextBoard, from, to)
-    return { from, to, nextBoard }
-}
+const moveHandler =
+    (
+        xoffset: (a: number, b: number) => number,
+        yoffset: (a: number, b: number) => number
+    ): MoveHandler =>
+    (board, from) => {
+        const { x, y } = from
+        const to = { x: xoffset(x, 1), y: yoffset(y, 1) }
+        if (isOccupied(board, to)) return undefined
+        const nextBoard = copyBoard(board)
+        move(nextBoard, from, to)
+        return { from, to, nextBoard }
+    }
 
-const topLeftEat = ifCheckedPosition(([x, y]) => x > 1 && y > 1, eatHandler(subtract, subtract))
-const topRightEat = ifCheckedPosition(([x, y]) => x < 6 && y > 1, eatHandler(add, subtract))
-const bottomLeftEat = ifCheckedPosition(([x, y]) => x > 1 && y < 6, eatHandler(subtract, add))
-const bottomRightEat = ifCheckedPosition(([x, y]) => x < 6 && y < 6, eatHandler(add, add))
+const topLeftEat = ifCheckedPosition(({ x, y }) => x > 1 && y > 1, eatHandler(subtract, subtract))
+const topRightEat = ifCheckedPosition(({ x, y }) => x < 6 && y > 1, eatHandler(add, subtract))
+const bottomLeftEat = ifCheckedPosition(({ x, y }) => x > 1 && y < 6, eatHandler(subtract, add))
+const bottomRightEat = ifCheckedPosition(({ x, y }) => x < 6 && y < 6, eatHandler(add, add))
 
 const eatHandlers = [
-    ifPlayer("white", topLeftEat),
-    ifPlayer("white", topRightEat),
-    ifPlayer("black", bottomLeftEat),
-    ifPlayer("black", bottomRightEat),
+    ifPlayer(Player.White, topLeftEat),
+    ifPlayer(Player.White, topRightEat),
+    ifPlayer(Player.Black, bottomLeftEat),
+    ifPlayer(Player.Black, bottomRightEat),
 
-    ifPiece("wq", bottomLeftEat),
-    ifPiece("wq", bottomRightEat),
-    ifPiece("bq", topLeftEat),
-    ifPiece("bq", topRightEat),
+    ifPiece(Piece.WhiteQueen, bottomLeftEat),
+    ifPiece(Piece.WhiteQueen, bottomRightEat),
+    ifPiece(Piece.BlackQueen, topLeftEat),
+    ifPiece(Piece.BlackQueen, topRightEat),
 ]
 
-const topLeftMove = ifCheckedPosition(([x, y]) => x > 0 && y > 0, moveHandler(subtract, subtract))
-const topRightMove = ifCheckedPosition(([x, y]) => x < 7 && y > 0, moveHandler(add, subtract))
-const bottomLeftMove = ifCheckedPosition(([x, y]) => x > 0 && y < 7, moveHandler(subtract, add))
-const bottomRightMove = ifCheckedPosition(([x, y]) => x < 7 && y < 7, moveHandler(add, add))
+const topLeftMove = ifCheckedPosition(({ x, y }) => x > 0 && y > 0, moveHandler(subtract, subtract))
+const topRightMove = ifCheckedPosition(({ x, y }) => x < 7 && y > 0, moveHandler(add, subtract))
+const bottomLeftMove = ifCheckedPosition(({ x, y }) => x > 0 && y < 7, moveHandler(subtract, add))
+const bottomRightMove = ifCheckedPosition(({ x, y }) => x < 7 && y < 7, moveHandler(add, add))
 
 const moveHandlers = [
-    ifPlayer("white", topLeftMove),
-    ifPlayer("white", topRightMove),
-    ifPlayer("black", bottomLeftMove),
-    ifPlayer("black", bottomRightMove),
+    ifPlayer(Player.White, topLeftMove),
+    ifPlayer(Player.White, topRightMove),
+    ifPlayer(Player.Black, bottomLeftMove),
+    ifPlayer(Player.Black, bottomRightMove),
 
-    ifPiece("wq", bottomLeftMove),
-    ifPiece("wq", bottomRightMove),
-    ifPiece("bq", topLeftMove),
-    ifPiece("bq", topRightMove),
+    ifPiece(Piece.WhiteQueen, bottomLeftMove),
+    ifPiece(Piece.WhiteQueen, bottomRightMove),
+    ifPiece(Piece.BlackQueen, topLeftMove),
+    ifPiece(Piece.BlackQueen, topRightMove),
 ]
 
 function* playerPositions(board: GameBoard, player: Player) {
-    for (let i = 0; i < 8; ++i) {
-        for (let j = 0; j < 8; ++j) {
-            const position: Position = [j, i]
-            const element = elementAt(board, position)
-            if (player === playerAffiliation(element)) {
-                yield { position, piece: element as Piece }
+    for (let y = 0; y < 8; ++y) {
+        for (let x = 0; x < 8; ++x) {
+            const position = { x, y }
+            const cell = cellAt(board, position)
+            if (pieceBit(cell)) {
+                const piece = cellToPiece(cell)
+                if (player === piecePlayer(piece)) {
+                    yield { position, piece }
+                }
             }
         }
     }
@@ -205,21 +181,9 @@ const existsEatMove = (board: GameBoard, position: Position, piece: Piece) => {
     return false
 }
 
-const nextPlayer: Record<Player, Player> = {
-    black: "white",
-    white: "black",
-}
+const nextPlayer = (player: Player) => player === Player.White ? Player.Black : Player.White
 
-const pieceValueMap: Record<Cell, number> = {
-    0: 0,
-    1: 0,
-    w: 1,
-    b: -1,
-    wq: 5,
-    bq: -5,
-}
-
-const pieceValue = (cell: Cell) => pieceValueMap[cell]
+const cellValue = (cell: Cell) => (colorBit(cell) * -2 + 1) * (pieceBit(cell) + queenBit(cell) * 5)
 
 const hasMoves = (board: GameBoard, player: Player) => {
     for (const { position, piece } of playerPositions(board, player)) {
@@ -234,16 +198,13 @@ const hasMoves = (board: GameBoard, player: Player) => {
 }
 
 const evaluateBoard = (board: GameBoard) => {
-    if (!hasMoves(board, "white")) return -200
-    if (!hasMoves(board, "black")) return 200
-    return board.flat().map(pieceValue).reduce(add, 0)
+    if (!hasMoves(board, Player.White)) return -200
+    if (!hasMoves(board, Player.Black)) return 200
+    return board.reduce((acc, curr) => acc + cellValue(curr as Cell))
 }
 
-function isMinimizingPlayer(player: "black"): true
-function isMinimizingPlayer(player: "white"): false
-function isMinimizingPlayer(player: Player): player is "black"
-function isMinimizingPlayer(player: Player): player is "black" {
-    return player === "black"
+function isMinimizingPlayer(player: Player): player is Player.Black {
+    return player === Player.Black
 }
 
 function minimax(
@@ -263,29 +224,27 @@ function minimax(board: GameBoard, player: Player, depth: number) {
 
     const moves = availableMoves(board, player)
     if (isMinimizingPlayer(player)) {
-        return minimizeMoves(moves, nextPlayer[player], depth - 1)
+        return minimizeMoves(moves, nextPlayer(player), depth - 1)
     } else {
-        return maximizeMoves(moves, nextPlayer[player], depth - 1)
+        return maximizeMoves(moves, nextPlayer(player), depth - 1)
     }
 }
 
-const bestMove = (init: number, cmp: (a: number, b: number) => boolean) => (
-    moves: Iterable<JSMove>,
-    player: Player,
-    depth: number
-): EvaluationResult | undefined => {
-    let score = init
-    let move: JSMove | undefined
-    for (const currentMove of moves) {
-        const res = minimax(currentMove.nextBoard, player, depth)
-        const currentScore = res ? res[1] : evaluateBoard(currentMove.nextBoard)
-        if (cmp(currentScore, score)) {
-            score = currentScore
-            move = currentMove
+const bestMove =
+    (init: number, cmp: (a: number, b: number) => boolean) =>
+    (moves: Iterable<JSMove>, player: Player, depth: number): EvaluationResult | undefined => {
+        let score = init
+        let move: JSMove | undefined
+        for (const currentMove of moves) {
+            const res = minimax(currentMove.nextBoard, player, depth)
+            const currentScore = res ? res[1] : evaluateBoard(currentMove.nextBoard)
+            if (cmp(currentScore, score)) {
+                score = currentScore
+                move = currentMove
+            }
         }
+        return move && [move, score]
     }
-    return move && [move, score]
-}
 
 const less = (a: number, b: number) => a < b
 const greater = (a: number, b: number) => a > b
@@ -309,7 +268,7 @@ const alphabeta = (
         let score = Number.POSITIVE_INFINITY
         let move: JSMove | undefined
         for (const currentMove of moves) {
-            const res = alphabeta(currentMove.nextBoard, nextPlayer[player], alpha, beta, depth - 1)
+            const res = alphabeta(currentMove.nextBoard, nextPlayer(player), alpha, beta, depth - 1)
             const currentScore = res ? res[1] : evaluateBoard(currentMove.nextBoard)
             if (currentScore < score) {
                 score = currentScore
@@ -323,7 +282,7 @@ const alphabeta = (
         let score = Number.NEGATIVE_INFINITY
         let move: JSMove | undefined
         for (const currentMove of moves) {
-            const res = alphabeta(currentMove.nextBoard, nextPlayer[player], alpha, beta, depth - 1)
+            const res = alphabeta(currentMove.nextBoard, nextPlayer(player), alpha, beta, depth - 1)
             const currentScore = res ? res[1] : evaluateBoard(currentMove.nextBoard)
             if (currentScore > score) {
                 score = currentScore
@@ -354,13 +313,14 @@ function* availableMoves(board: GameBoard, player: Player) {
 }
 
 const movesFor = (board: GameBoard, position: Position) => {
-    const cell = elementAt(board, position)
-    if (cell === "0" || cell === "1") return []
-    const player = playerAffiliation(cell)
+    const cell = cellAt(board, position)
+    if (!pieceBit(cell)) return []
+    const piece = cellToPiece(cell)
+    const player = piecePlayer(piece)
     if (canPlayerMakeEatMove(board, player)) {
-        return [...chainEatMoves(board, position, cell)]
+        return [...chainEatMoves(board, position, piece)]
     }
-    return [...validMoves(moveHandlers, board, position, cell)]
+    return [...validMoves(moveHandlers, board, position, piece)]
 }
 
 const canEat = (board: GameBoard, player: Player) =>
