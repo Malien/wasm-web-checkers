@@ -1,0 +1,37 @@
+{
+    "$schema": "https://json.schemastore.org/web-manifest",
+    "name": "WebAssembly Checkers",
+    "short_name": "Checkers",
+    "theme_color": "#ebebeb",
+    "background_color": "#ffffff",
+    "start_url": "/",
+    "display": "standalone",
+    "icons": [
+        {
+            "src": "icon@1x.png",
+            "sizes": "128x128",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }, {
+            "src": "icon@1.5x.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }, {
+            "src": "icon@2x.png",
+            "sizes": "256x256",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }, {
+            "src": "icon@3x.png",
+            "sizes": "384x384",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }, {
+            "src": "icon@4x.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}
