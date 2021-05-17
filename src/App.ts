@@ -8,12 +8,11 @@ import type {
     Position,
     SearchAlgorithm,
 } from "./common"
-import { JSGameLogic } from "./js"
-import { RSGameLogic } from "./rs"
 import { MoveCheckersEvent, SelectCheckersEvent } from "./components/Board"
 import { cmpPositions, Disposable, measureWithResult } from "./util"
 import { MakePlayEvent } from "./components/Controls"
 import { ifDefined } from "./util/directives"
+import initEngine from "./initEngine"
 
 import "@material/mwc-snackbar"
 import { Snackbar } from "@material/mwc-snackbar"
@@ -24,7 +23,6 @@ import {
     BackendChangeEvent,
     SearchDepthChangeEvent,
 } from "./components/Settings"
-import initEngine from "./initEngine"
 
 const emptyBoard: GameBoard = [
     ["0", "1", "0", "1", "0", "1", "0", "1"],
@@ -131,6 +129,10 @@ export default class App extends LitElement {
             this.board = await game.nextBoard(move)
             this.canEat = await calculateCanEat(game, this.board)
         })
+    }
+
+    showSWReadyMessage() {
+        this.snackbar.show()
     }
 
     handleAlgoChange(ev: AlgorithmChangeEvent) {

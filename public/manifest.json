@@ -1,6 +1,6 @@
 {
     "$schema": "https://json.schemastore.org/web-manifest",
-    "name": "Prolog Web Checkers",
+    "name": "WebAssembly Checkers",
     "short_name": "Checkers",
     "theme_color": "#ebebeb",
     "background_color": "#ffffff",

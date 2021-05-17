@@ -92,11 +92,9 @@ pub fn alphabeta(board: Board, player: Player, depth: u8) -> Solution {
                     beta = min(beta, current_score);
                 }
                 if beta <= alpha {
-                    println!("Cut");
                     break;
                 }
             }
-            println!("alpha={}\tbeta={}\tdepth={}\tplayer={:?}", alpha, beta, depth, player);
             Solution::new(score, res)
         } else {
             let mut score = None;
@@ -116,11 +114,9 @@ pub fn alphabeta(board: Board, player: Player, depth: u8) -> Solution {
                     alpha = max(alpha, current_score);
                 }
                 if alpha >= beta {
-                    println!("Cut");
                     break;
                 }
             }
-            println!("alpha={}\tbeta={}\tdepth={}\tplayer={:?}", alpha, beta, depth, player);
             Solution::new(score, res)
         }
     }

@@ -6,3 +6,4 @@ tsconfig.tsbuildinfo
 dist
 yarn-error.log
 .vscode
+~$WASM checker benchmark results.xlsx

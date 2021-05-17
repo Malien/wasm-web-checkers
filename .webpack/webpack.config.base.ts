@@ -2,7 +2,6 @@ import path from "path"
 import CopyPlugin from "copy-webpack-plugin"
 
 export default {
-    devtool: "source-map",
     entry: {
         main: "./src/main.ts",
         "swipl-worker": "./src/swipl/worker.ts",
