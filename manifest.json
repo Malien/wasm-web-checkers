@@ -4,7 +4,7 @@
     "short_name": "Checkers",
     "theme_color": "#ebebeb",
     "background_color": "#ffffff",
-    "start_url": "/",
+    "start_url": "./",
     "display": "standalone",
     "icons": [
         {
