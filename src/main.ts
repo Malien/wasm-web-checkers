@@ -2,7 +2,7 @@ import "./App"
 
 if (navigator.serviceWorker) {
     navigator.serviceWorker
-        .register("/sw.js")
+        .register("sw.js")
         .then(() => {
             if (localStorage.getItem("sw-notified") !== "true") {
                 document.querySelector("checkers-app")?.showSWReadyMessage()

@@ -49,9 +49,7 @@ export default class App extends LitElement {
         super()
         initEngine(this.backend).then(async engine => {
             await engine.ready
-            console.log("engine ready")
             this.board = await engine.initializeBoard()
-            console.log("board", this.board)
             this.game = engine
         })
     }
@@ -125,7 +123,6 @@ export default class App extends LitElement {
             )
             if (!play) return alert(`No plays for ${forPlayer}`)
             const [move, score] = play
-            console.log("score", score)
             this.board = await game.nextBoard(move)
             this.canEat = await calculateCanEat(game, this.board)
         })
@@ -182,8 +179,6 @@ export default class App extends LitElement {
             waiting,
             took,
         } = this
-
-        console.log(!!board)
 
         return html`
             <checkers-board

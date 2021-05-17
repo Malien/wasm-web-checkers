@@ -3,7 +3,7 @@ import { AnyFunction } from "../util"
 import init, { movesFor, availableMoves, canEat, initializeBoard, minimax, alphabeta } from "./checkers/pkg/checkers-rs"
 import { RSWorkerProxy } from "./types"
 
-const ready = init("/checkers-rs.wasm").then(() => {})
+const ready = init("checkers-rs.wasm").then(() => {})
 
 const readify = <F extends AnyFunction>(
     f: F

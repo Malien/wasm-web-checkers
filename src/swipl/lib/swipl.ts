@@ -259,7 +259,7 @@ const readStdin = () => null
 const configureModule = (location: string): EmscriptenModule =>
     (({
         noInitialRun: true,
-        locateFile: url => `/${location}/${url}`,
+        locateFile: url => `${location}/${url}`,
         print: console.log,
         printErr: console.error,
         // @ts-ignore

@@ -12,22 +12,22 @@ self.addEventListener("install", ev => {
             .open("caches-v1")
             .then(cache =>
                 cache.addAll([
-                    "/",
-                    "/manifest.json",
-                    "/main.js",
-                    "/js-worker.js",
-                    "/rs-worker.js",
-                    "/swipl-worker.js",
-                    "/main.pl",
-                    "/icon@1x.png",
-                    "/icon@1.5x.png",
-                    "/icon@2x.png",
-                    "/icon@3x.png",
-                    "/icon@4x.png",
-                    "/checkers-rs.wasm",
-                    "/swipl-wasm/swipl-web.js",
-                    "/swipl-wasm/swipl-web.wasm",
-                    "/swipl-wasm/swipl-web.data",
+                    "./",
+                    "./manifest.json",
+                    "./main.js",
+                    "./js-worker.js",
+                    "./rs-worker.js",
+                    "./swipl-worker.js",
+                    "./main.pl",
+                    "./icon@1x.png",
+                    "./icon@1.5x.png",
+                    "./icon@2x.png",
+                    "./icon@3x.png",
+                    "./icon@4x.png",
+                    "./checkers-rs.wasm",
+                    "./swipl-wasm/swipl-web.js",
+                    "./swipl-wasm/swipl-web.wasm",
+                    "./swipl-wasm/swipl-web.data",
                 ])
             )
     )

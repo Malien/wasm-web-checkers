@@ -8,8 +8,6 @@ import { collectList, constructArgsArray, newTermRefs, bind as bindUtil } from "
 import { bind as bindTypecheck } from "./lib/typecheck"
 
 const configured = loadSwiplInWorker("./swipl-wasm").then(async PL => {
-    console.log("INIT!")
-
     const predicates = {
         boardInitializeGame: PL.predicate("board_initialize_game", 1, "user"),
         nextMove: PL.predicate("next_move", 5, "user"),
@@ -55,7 +53,6 @@ const configured = loadSwiplInWorker("./swipl-wasm").then(async PL => {
         if (!PL.getArg(5, moveTerm, nextBoard)) {
             throw new Error("Couldn't get nexBoard from move")
         }
-        // console.log("nextBoard type:", TermType[PL.termType(nextBoard)])
 
         return {
             from: [fromX - 1, fromY - 1],
@@ -132,7 +129,6 @@ const worker: SwiplWorker = {
     },
 
     async initializeBoard() {
-        console.log("hello")
         const { PL, predicates, callPredicate } = await configured
         const term = PL.newTermRef()
         callPredicate(predicates.boardInitializeGame, term)
