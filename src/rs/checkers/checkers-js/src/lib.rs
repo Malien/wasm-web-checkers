@@ -69,29 +69,29 @@ pub fn initialize_board() -> TSBoard {
 
 #[wasm_bindgen(js_name = "movesFor")]
 pub fn moves_for(board: TSBoard, position: TSPosition) -> TSMoveArray {
-    checkers_rs::moves_for(board.into(), position.into())
+    checkers_rs::moves_for(&board.into(), position.into())
         .map(TSMoveArray::from_iter)
         .unwrap_or_default()
 }
 
 #[wasm_bindgen(js_name = "canEat")]
 pub fn can_eat(board: TSBoard, player: TSPlayer) -> TSPositionArray {
-    checkers_rs::can_eat(board.into(), player.into()).collect()
+    checkers_rs::can_eat(&board.into(), player.into()).collect()
 }
 
 #[wasm_bindgen(js_name = "availableMoves")]
 pub fn available_moves(board: TSBoard, player: TSPlayer) -> TSMoveArray {
-    checkers_rs::available_moves(board.into(), player.into()).collect()
+    checkers_rs::available_moves(&board.into(), player.into()).collect()
 }
 
 #[wasm_bindgen]
 pub fn minimax(board: TSBoard, player: TSPlayer, depth: u8) -> Option<TSSolution> {
-    Solution::from_checkers(checkers_rs::minimax(board.into(), player.into(), depth))
+    Solution::from_checkers(checkers_rs::minimax(&board.into(), player.into(), depth))
         .map(TSSolution::from)
 }
 
 #[wasm_bindgen]
 pub fn alphabeta(board: TSBoard, player: TSPlayer, depth: u8) -> Option<TSSolution> {
-    Solution::from_checkers(checkers_rs::alphabeta(board.into(), player.into(), depth))
+    Solution::from_checkers(checkers_rs::alphabeta(&board.into(), player.into(), depth))
         .map(TSSolution::from)
 }

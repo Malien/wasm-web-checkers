@@ -94,14 +94,14 @@ where
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct RuleSeqIter<T> {
-    pub board: Board,
+pub struct RuleSeqIter<'a, T>  {
+    pub board: &'a Board,
     pub from: Position,
     pub piece: Piece,
     pub seq: T,
 }
 
-impl<T> Iterator for RuleSeqIter<T>
+impl<'a, T> Iterator for RuleSeqIter<'a, T>
 where
     T: RuleSeq,
 {

@@ -1,16 +1,26 @@
 import { expose } from "comlink"
 import { AnyFunction } from "../util"
-import init, { movesFor, availableMoves, canEat, initializeBoard, minimax, alphabeta } from "./checkers/pkg/checkers-rs"
+import init, {
+    movesFor,
+    availableMoves,
+    canEat,
+    initializeBoard,
+    minimax,
+    alphabeta,
+    sizes,
+} from "./checkers/pkg/checkers-rs"
 import { RSWorkerProxy } from "./types"
 
-const ready = init("checkers-rs.wasm").then(() => {})
+const ready = init("checkers-rs.wasm").then(() => {
+    console.debug("Rust internal structures sizes", sizes())
+})
 
-const readify = <F extends AnyFunction>(
-    f: F
-): ((...args: Parameters<F>) => Promise<ReturnType<F>>) => async (...args) => {
-    await ready
-    return f(...args)
-}
+const readify =
+    <F extends AnyFunction>(f: F): ((...args: Parameters<F>) => Promise<ReturnType<F>>) =>
+    async (...args) => {
+        await ready
+        return f(...args)
+    }
 
 const workerInterface: RSWorkerProxy = {
     initializeBoard: readify(initializeBoard),

@@ -8,6 +8,7 @@
     "build": "NODE_ENV=production TS_NODE_PROJECT=.webpack/webpack.tsconfig.json webpack -c .webpack/webpack.config.prod.ts",
     "build:dev": "NODE_ENV=development TS_NODE_PROJECT=.webpack/webpack.tsconfig.json webpack -c .webpack/webpack.config.dev.ts",
     "build:rs": "cd src/rs/checkers; wasm-pack build checkers-js --target web -d ../pkg --out-name checkers-rs",
+    "build:rs:dev": "cd src/rs/checkers; wasm-pack build checkers-js --dev --target web -d ../pkg --out-name checkers-rs",
     "deploy": "gh-pages -d dist"
   },
   "devDependencies": {

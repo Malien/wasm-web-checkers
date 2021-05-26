@@ -12,15 +12,15 @@ impl Evaluate for Cell {
 
 impl Evaluate for Row {
     fn evaluate(&self) -> i32 {
-        self.into_iter().map(Evaluate::evaluate).sum()
+        self.into_iter().map(|cell| cell.evaluate()).sum()
     }
 }
 
 impl Evaluate for Board {
     fn evaluate(&self) -> i32 {
-        if !crate::has_moves(*self, Player::White) {
+        if !crate::has_moves(self, Player::White) {
             -200
-        } else if !crate::has_moves(*self, Player::Black) {
+        } else if !crate::has_moves(self, Player::Black) {
             200
         } else {
             self.into_iter().map(Evaluate::evaluate).sum()

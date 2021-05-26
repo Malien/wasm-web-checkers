@@ -8,12 +8,23 @@ use std::fmt;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Position {
-    pub x: u8,
-    pub y: u8,
+    pub(crate) x: u8,
+    pub(crate) y: u8,
 }
 
 impl Position {
-    pub fn new(x: u8, y: u8) -> Self {
+    pub fn new(x: u8, y: u8) -> Option<Self> {
+        if x < 8 && y < 8 {
+            Some(Self { x, y })
+        } else {
+            None
+        }
+    }
+
+    // Safety: Position can only represent position on a 8 by 8 board
+    // so safe construction of position is only possible if both 
+    // coordinated are less than 8
+    pub unsafe fn new_unchecked(x: u8, y: u8) -> Self {
         Self { x, y }
     }
 }

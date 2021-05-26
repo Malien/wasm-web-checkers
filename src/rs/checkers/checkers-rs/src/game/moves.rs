@@ -92,7 +92,7 @@ where
 const ADD: fn(u8, u8) -> u8 = |x: u8, y: u8| x + y;
 const SUB: fn(u8, u8) -> u8 = |x: u8, y: u8| x - y;
 
-pub fn eat_moves(board: Board, from: Position, piece: Piece) -> impl Iterator<Item = Move> {
+pub fn eat_moves(board: &Board, from: Position, piece: Piece) -> RuleSeqIter<'_, impl RuleSeq> {
     let top_left = EatHandler::new(SUB, SUB).filter(|_, Position { x, y }, _| x > 1 && y > 1);
     let top_right = EatHandler::new(ADD, SUB).filter(|_, Position { x, y }, _| x < 6 && y > 1);
     let bottom_left = EatHandler::new(SUB, ADD).filter(|_, Position { x, y }, _| x > 1 && y < 6);
@@ -115,7 +115,7 @@ pub fn eat_moves(board: Board, from: Position, piece: Piece) -> impl Iterator<It
     }
 }
 
-pub fn moves(board: Board, from: Position, piece: Piece) -> impl Iterator<Item = Move> {
+pub fn moves(board: &Board, from: Position, piece: Piece) -> RuleSeqIter<'_, impl RuleSeq>{
     let top_left = MoveHandler::new(SUB, SUB).filter(|_, Position { x, y }, _| x > 0 && y > 0);
     let top_right = MoveHandler::new(ADD, SUB).filter(|_, Position { x, y }, _| x < 7 && y > 0);
     let bottom_left = MoveHandler::new(SUB, ADD).filter(|_, Position { x, y }, _| x > 0 && y < 7);
@@ -149,7 +149,7 @@ impl Iterator for ChainEatsIter {
         loop {
             let mv = self.queue.pop_front()?;
             let prior_len = self.queue.len();
-            self.queue.extend(eat_moves(mv.next_board, mv.to, self.piece));
+            self.queue.extend(eat_moves(&mv.next_board, mv.to, self.piece));
             if self.queue.len() == prior_len {
                 return Some(mv);
             }
@@ -157,7 +157,7 @@ impl Iterator for ChainEatsIter {
     }
 }
 
-pub fn chain_eat_moves(board: Board, from: Position, piece: Piece) -> ChainEatsIter {
+pub fn chain_eat_moves(board: &Board, from: Position, piece: Piece) -> ChainEatsIter {
     ChainEatsIter {
         piece,
         queue: eat_moves(board, from, piece).collect()

@@ -31,7 +31,7 @@ impl Solution {
 const LESS: fn(i32, i32) -> bool = |a, b| a < b;
 const GREATER: fn(i32, i32) -> bool = |a, b| a > b;
 
-pub fn minimax(board: Board, player: Player, depth: u8) -> Solution {
+pub fn minimax(board: &Board, player: Player, depth: u8) -> Solution {
     if depth == 0 {
         return Solution::Score(board.evaluate());
     }
@@ -43,7 +43,7 @@ pub fn minimax(board: Board, player: Player, depth: u8) -> Solution {
 }
 
 fn best_move(
-    board: Board,
+    board: &Board,
     player: Player,
     depth: u8,
     cmp_fn: impl Fn(i32, i32) -> bool,
@@ -52,7 +52,7 @@ fn best_move(
     let mut score = None;
     let mut res = None;
     for mv in moves {
-        let next = minimax(mv.next_board, player.next(), depth - 1);
+        let next = minimax(&mv.next_board, player.next(), depth - 1);
         let current_score = next.score().unwrap_or_else(|| mv.next_board.evaluate());
         if let Some(ref mut score) = score {
             if cmp_fn(current_score, *score) {
@@ -67,8 +67,8 @@ fn best_move(
     Solution::new(score, res)
 }
 
-pub fn alphabeta(board: Board, player: Player, depth: u8) -> Solution {
-    fn inner(board: Board, player: Player, mut alpha: i32, mut beta: i32, depth: u8) -> Solution {
+pub fn alphabeta(board: &Board, player: Player, depth: u8) -> Solution {
+    fn inner(board: &Board, player: Player, mut alpha: i32, mut beta: i32, depth: u8) -> Solution {
         if depth == 0 {
             return Solution::Score(board.evaluate());
         }
@@ -78,7 +78,7 @@ pub fn alphabeta(board: Board, player: Player, depth: u8) -> Solution {
             let mut score = None;
             let mut res = None;
             for mv in moves {
-                let next = inner(mv.next_board, player.next(), alpha, beta, depth - 1);
+                let next = inner(&mv.next_board, player.next(), alpha, beta, depth - 1);
                 let current_score = next.score().unwrap_or_else(|| mv.next_board.evaluate());
                 if let Some(ref mut score) = score {
                     if current_score < *score {
@@ -100,7 +100,7 @@ pub fn alphabeta(board: Board, player: Player, depth: u8) -> Solution {
             let mut score = None;
             let mut res = None;
             for mv in moves {
-                let next = inner(mv.next_board, player.next(), alpha, beta, depth - 1);
+                let next = inner(&mv.next_board, player.next(), alpha, beta, depth - 1);
                 let current_score = next.score().unwrap_or_else(|| mv.next_board.evaluate());
                 if let Some(ref mut score) = score {
                     if current_score < *score {

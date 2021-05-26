@@ -3,10 +3,10 @@ pub mod types;
 
 use crate::game::moves::moves;
 use game::moves::{chain_eat_moves, eat_moves};
-pub use types::*;
 pub use game::solution::*;
+pub use types::*;
 
-pub fn moves_for(board: Board, position: Position) -> Option<Vec<Move>> {
+pub fn moves_for(board: &Board, position: Position) -> Option<Vec<Move>> {
     let piece = board.cell_at(position).into_piece()?;
     if player_can_make_eat_move(board, piece.player_affiliation()) {
         Some(chain_eat_moves(board, position, piece).collect())
@@ -15,7 +15,7 @@ pub fn moves_for(board: Board, position: Position) -> Option<Vec<Move>> {
     }
 }
 
-fn player_can_make_eat_move(board: Board, player: Player) -> bool {
+fn player_can_make_eat_move(board: &Board, player: Player) -> bool {
     for (position, piece) in player_positions(board, player) {
         if exists_eat_move(board, position, piece) {
             return true;
@@ -24,14 +24,21 @@ fn player_can_make_eat_move(board: Board, player: Player) -> bool {
     return false;
 }
 
-fn player_positions(board: Board, player: Player) -> impl Iterator<Item = (Position, Piece)> {
+fn player_positions(
+    board: &Board,
+    player: Player,
+) -> impl Iterator<Item = (Position, Piece)> + '_ {
     board.into_iter().enumerate().flat_map(move |(y, row)| {
         player_row_positions(row, player)
-            .map(move |(x, piece)| (Position::new(x as u8, y as u8), piece))
+            .map(move |(x, piece)| {
+                // SAFETY: This is fine since the only x and y indices are from 0 to 8 (excluding)
+                let position = unsafe { Position::new_unchecked(x as u8, y as u8) };
+                (position, piece)
+            })
     })
 }
 
-fn player_row_positions(row: Row, player: Player) -> impl Iterator<Item = (usize, Piece)> {
+fn player_row_positions(row: &Row, player: Player) -> impl Iterator<Item = (usize, Piece)> + '_ {
     row.into_iter()
         .map(Cell::into_piece)
         .enumerate()
@@ -39,11 +46,11 @@ fn player_row_positions(row: Row, player: Player) -> impl Iterator<Item = (usize
         .filter(move |(_, piece)| piece.player_affiliation() == player)
 }
 
-fn exists_eat_move(board: Board, from: Position, piece: Piece) -> bool {
+fn exists_eat_move(board: &Board, from: Position, piece: Piece) -> bool {
     eat_moves(board, from, piece).next().is_some()
 }
 
-pub fn can_eat(board: Board, player: Player) -> impl Iterator<Item = Position> {
+pub fn can_eat(board: &Board, player: Player) -> impl Iterator<Item = Position> + '_ {
     player_positions(board, player)
         .filter(move |(position, piece)| exists_eat_move(board, *position, *piece))
         .map(|(position, _)| position)
@@ -79,7 +86,7 @@ where
     }
 }
 
-pub fn available_moves(board: Board, player: Player) -> impl Iterator<Item = Move> {
+pub fn available_moves(board: &Board, player: Player) -> impl Iterator<Item = Move> + '_ {
     AvailableMovesIter {
         had_eats: false,
         eats: Some(
@@ -91,7 +98,7 @@ pub fn available_moves(board: Board, player: Player) -> impl Iterator<Item = Mov
     }
 }
 
-pub fn has_moves(board: Board, player: Player) -> bool {
+pub fn has_moves(board: &Board, player: Player) -> bool {
     for (position, piece) in player_positions(board, player) {
         if moves(board, position, piece).next().is_some() {
             return true;

@@ -1,9 +1,11 @@
 use std::fmt::{Display, Formatter, Write};
+use num_enum::UnsafeFromPrimitive;
 
 use super::{Piece, Player};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, UnsafeFromPrimitive)]
+#[repr(u8)]
 pub enum Cell {
     #[serde(rename = "0")]
     White = 0b000,
