@@ -2,7 +2,10 @@ use crate::Coord;
 
 use super::{promote, Cell, Position, Row};
 use serde::{Deserialize, Serialize};
-use std::{fmt::{Display, Formatter, Write}, usize, ops::{Index, IndexMut}};
+use std::{
+    fmt::{Display, Formatter, Write},
+    ops::{Index, IndexMut},
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Board([Row; 8]);
@@ -36,15 +39,13 @@ impl Index<Coord> for Board {
     type Output = Row;
 
     fn index(&self, idx: Coord) -> &Self::Output {
-        let idx: usize = idx.into();
-        &self.0[idx]
+        &self.0[idx.as_usize()]
     }
 }
 
 impl IndexMut<Coord> for Board {
     fn index_mut(&mut self, idx: Coord) -> &mut Self::Output {
-        let idx: usize = idx.into();
-        &mut self.0[idx]
+        &mut self.0[idx.as_usize()]
     }
 }
 

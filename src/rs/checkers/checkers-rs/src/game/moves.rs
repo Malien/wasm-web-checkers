@@ -11,32 +11,35 @@ use super::{
 };
 
 #[derive(Debug, Clone, Copy)]
-pub struct EatHandler<XFn, YFn> {
-    xoffset: XFn,
-    yoffset: YFn,
+pub enum Direction {
+    Pos = 1,
+    Neg = -1,
 }
 
-impl<XFn, YFn> EatHandler<XFn, YFn> {
-    pub fn new(xoffset: XFn, yoffset: YFn) -> Self {
-        Self { xoffset, yoffset }
+const fn offset_coord(original: Coord, direction: Direction, offset: u8) -> Coord {
+    let mut v: i8 = original.as_i8();
+    v += (direction as i8) * (offset as i8);
+    unsafe { Coord::new_unchecked(v as u8) }
+}
+
+#[derive(Debug, Clone, Copy)]
+struct Direction2D {
+    x: Direction,
+    y: Direction,
+}
+
+const fn offset_position(original: Position, direction: Direction2D, offset: u8) -> Position {
+    Position {
+        x: offset_coord(original.x, direction.x, offset),
+        y: offset_coord(original.y, direction.y, offset),
     }
 }
 
-impl<XFn, YFn> MoveRule for EatHandler<XFn, YFn>
-where
-    XFn: Fn(Coord, u8) -> Coord,
-    YFn: Fn(Coord, u8) -> Coord,
-{
-    fn compute_move(&self, board: &Board, from: Position, piece: Piece) -> Option<Move> {
-        let Position { x, y } = from;
-        let jump_over = Position {
-            x: (self.xoffset)(x, 1),
-            y: (self.yoffset)(y, 1),
-        };
-        let to = Position {
-            x: (self.xoffset)(x, 2),
-            y: (self.yoffset)(y, 2),
-        };
+pub fn eat_handler(x: Direction, y: Direction) -> impl MoveRule + Copy + Clone {
+    let direction = Direction2D { x, y };
+    return move |board: &Board, from: Position, piece: Piece| {
+        let jump_over = offset_position(from, direction, 1);
+        let to = offset_position(from, direction, 2);
         let condition = board
             .cell_at(jump_over)
             .is_enemy_to(piece.player_affiliation())
@@ -54,33 +57,13 @@ where
             to,
             next_board,
         })
-    }
+    };
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct MoveHandler<XFn, YFn> {
-    xoffset: XFn,
-    yoffset: YFn,
-}
-
-impl<XFn, YFn> MoveHandler<XFn, YFn> {
-    pub fn new(xoffset: XFn, yoffset: YFn) -> Self {
-        Self { xoffset, yoffset }
-    }
-}
-
-impl<XFn, YFn> MoveRule for MoveHandler<XFn, YFn>
-where
-    XFn: Fn(Coord, u8) -> Coord,
-    YFn: Fn(Coord, u8) -> Coord,
-{
-    fn compute_move(&self, board: &Board, from: Position, _: Piece) -> Option<Move> {
-        let Position { x, y } = from;
-        let to = Position {
-            x: (self.xoffset)(x, 1),
-            y: (self.yoffset)(y, 1),
-        };
-        // alert(format!("compute_move(board, {:?}, {:?}): to: {:?}", from, piece, to).as_str());
+pub fn move_handler(x: Direction, y: Direction) -> impl MoveRule + Copy + Clone {
+    let direction = Direction2D { x, y };
+    return move |board: &Board, from: Position, _: Piece| {
+        let to = offset_position(from, direction, 1);
         if board.is_occupied(to) {
             return None;
         }
@@ -91,24 +74,15 @@ where
             to,
             next_board,
         })
-    }
+    };
 }
 
-// SAFETY: The filters check that these operations are safe
-const ADD: fn(Coord, u8) -> Coord =
-    |x: Coord, y: u8| unsafe { Coord::new_unchecked(Into::<u8>::into(x) + y) };
-const SUB: fn(Coord, u8) -> Coord =
-    |x: Coord, y: u8| unsafe { Coord::new_unchecked(Into::<u8>::into(x) - y) };
-
 pub fn eat_moves(board: &Board, from: Position, piece: Piece) -> RuleSeqIter<'_, impl RuleSeq> {
-    let top_left =
-        EatHandler::new(SUB, SUB).filter(|_, Position { x, y }, _| x > c!(1) && y > c!(1));
-    let top_right =
-        EatHandler::new(ADD, SUB).filter(|_, Position { x, y }, _| x < c!(6) && y > c!(1));
-    let bottom_left =
-        EatHandler::new(SUB, ADD).filter(|_, Position { x, y }, _| x > c!(1) && y < c!(6));
-    let bottom_right =
-        EatHandler::new(ADD, ADD).filter(|_, Position { x, y }, _| x < c!(6) && y < c!(6));
+    use Direction::*;
+    let top_left = eat_handler(Neg, Neg).filter_position(|x, y| x > c!(1) && y > c!(1));
+    let top_right = eat_handler(Pos, Neg).filter_position(|x, y| x < c!(6) && y > c!(1));
+    let bottom_left = eat_handler(Neg, Pos).filter_position(|x, y| x > c!(1) && y < c!(6));
+    let bottom_right = eat_handler(Pos, Pos).filter_position(|x, y| x < c!(6) && y < c!(6));
 
     let top = top_left.chain(top_right);
     let bottom = bottom_left.chain(bottom_right);
@@ -128,14 +102,11 @@ pub fn eat_moves(board: &Board, from: Position, piece: Piece) -> RuleSeqIter<'_,
 }
 
 pub fn moves(board: &Board, from: Position, piece: Piece) -> RuleSeqIter<'_, impl RuleSeq> {
-    let top_left =
-        MoveHandler::new(SUB, SUB).filter(|_, Position { x, y }, _| x > c!(0) && y > c!(0));
-    let top_right =
-        MoveHandler::new(ADD, SUB).filter(|_, Position { x, y }, _| x < c!(7) && y > c!(0));
-    let bottom_left =
-        MoveHandler::new(SUB, ADD).filter(|_, Position { x, y }, _| x > c!(0) && y < c!(7));
-    let bottom_right =
-        MoveHandler::new(ADD, ADD).filter(|_, Position { x, y }, _| x < c!(7) && y < c!(7));
+    use Direction::*;
+    let top_left = move_handler(Neg, Neg).filter_position(|x, y| x > c!(0) && y > c!(0));
+    let top_right = move_handler(Pos, Neg).filter_position(|x, y| x < c!(7) && y > c!(0));
+    let bottom_left = move_handler(Neg, Pos).filter_position(|x, y| x > c!(0) && y < c!(7));
+    let bottom_right = move_handler(Pos, Pos).filter_position(|x, y| x < c!(7) && y < c!(7));
 
     let top = top_left.chain(top_right);
     let bottom = bottom_left.chain(bottom_right);

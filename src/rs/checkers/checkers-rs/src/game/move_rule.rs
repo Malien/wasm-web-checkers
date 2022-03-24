@@ -2,15 +2,15 @@ use super::{
     filters::{HandlerFilter, IfPiece, IfPlayer},
     rule_seq::{seq, ChainHandler, RuleSeq, SingleRuleSeq},
 };
-use crate::types::{Board, Move, Piece, Player, Position};
+use crate::{types::{Board, Move, Piece, Player, Position}, Coord};
 
 pub trait MoveRule {
     fn compute_move(&self, board: &Board, from: Position, piece: Piece) -> Option<Move>;
 
-    fn filter<P>(self, predicate: P) -> HandlerFilter<Self, P>
+    fn filter_position<P>(self, predicate: P) -> HandlerFilter<Self, P>
     where
         Self: Sized,
-        P: Fn(&Board, Position, Piece) -> bool,
+        P: Fn(Coord, Coord) -> bool,
     {
         HandlerFilter {
             over: self,

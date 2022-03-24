@@ -7,18 +7,6 @@ use serde::{
 #[serde(transparent)]
 pub struct Coord(u8);
 
-impl From<Coord> for usize {
-    fn from(Coord(v): Coord) -> Self {
-        v as usize
-    }
-}
-
-impl From<Coord> for u8 {
-    fn from(Coord(v): Coord) -> Self {
-        v
-    }
-}
-
 impl<'de> Deserialize<'de> for Coord {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -54,7 +42,7 @@ impl<'de> Deserialize<'de> for Coord {
 
 impl Coord {
     // SAFETY: values are expected to be in range 0 to 7 inclusive
-    pub unsafe fn new_unchecked(v: u8) -> Self {
+    pub const unsafe fn new_unchecked(v: u8) -> Self {
         Self(v)
     }
 
@@ -68,6 +56,18 @@ impl Coord {
 
     pub fn in_order() -> impl Iterator<Item = Coord> {
         (0..8).into_iter().map(|v| Self(v))
+    }
+
+    pub const fn as_usize(self) -> usize {
+        self.0 as usize
+    }
+
+    pub const fn as_u8(self) -> u8 {
+        self.0 as u8
+    }
+
+    pub const fn as_i8(self) -> i8 {
+        self.0 as i8
     }
 }
 

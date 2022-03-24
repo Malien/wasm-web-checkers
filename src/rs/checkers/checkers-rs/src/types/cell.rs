@@ -83,8 +83,7 @@ impl Cell {
 }
 
 pub fn promote(y: Coord, cell: Cell) -> Cell {
-    let y: u8 = y.into();
-    match (y, cell) {
+    match (y.as_u8(), cell) {
         (7, Cell::BlackPiece) => Cell::BlackQueen,
         (0, Cell::WhitePiece) => Cell::WhiteQueen,
         _ => cell,

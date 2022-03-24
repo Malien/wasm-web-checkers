@@ -15,7 +15,7 @@ pub struct Row(u32);
 impl Row {
     // SAFETY: idx should be less than 8
     pub fn cell_at(&self, idx: Coord) -> Cell {
-        let idx: u8 = idx.into();
+        let idx: u8 = idx.as_u8();
         let value = (self.0 >> (idx * 4)) & 0b111;
         // SAFETY: Since Row stores cells inside of the u32 at 4 bit long offsets
         // it is safe to assume that self.0 >> (idx * 4) shifts exactly those 4
@@ -25,7 +25,7 @@ impl Row {
     }
 
     pub fn replace(&mut self, idx: Coord, cell: Cell) {
-        let idx: u8 = idx.into();
+        let idx: u8 = idx.as_u8();
         let offset = idx * 4;
         let zeroed = self.0 & (!(0b1111 << offset));
         self.0 = zeroed | ((cell as u32) << offset);

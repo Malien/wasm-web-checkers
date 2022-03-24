@@ -1,3 +1,4 @@
+use crate::Coord;
 use crate::types::{Board, Move, Piece, Player, Position};
 
 use super::move_rule::MoveRule;
@@ -77,11 +78,11 @@ pub struct HandlerFilter<H, T> {
 impl<H, T> MoveRule for HandlerFilter<H, T>
 where
     H: MoveRule,
-    T: Fn(&Board, Position, Piece) -> bool,
+    T: Fn(Coord, Coord) -> bool,
 {
     fn compute_move(&self, board: &Board, from: Position, piece: Piece) -> Option<Move> {
         // alert(format!("HandlerFilter.compute_move(board, {:?}, {:?})", from, piece).as_str());
-        if (self.filter)(board, from, piece) {
+        if (self.filter)(from.x, from.y) {
             self.over.compute_move(board, from, piece)
         } else {
             None
