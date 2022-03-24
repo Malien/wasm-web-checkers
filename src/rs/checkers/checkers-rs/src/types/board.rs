@@ -1,24 +1,25 @@
+use crate::Coord;
+
 use super::{promote, Cell, Position, Row};
 use serde::{Deserialize, Serialize};
-use std::{fmt::{Display, Formatter, Write}, usize};
+use std::{fmt::{Display, Formatter, Write}, usize, ops::{Index, IndexMut}};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Board(pub [Row; 8]);
+pub struct Board([Row; 8]);
 
 impl Board {
     pub fn cell_at(&self, Position { x, y }: Position) -> Cell {
-        // SAFETY: This is fine, since position represents only valid board coordinates
-        unsafe { self.0[y as usize].cell_at(x) }
+        self[y].cell_at(x)
     }
 
     pub fn replace(&mut self, Position { x, y }: Position, cell: Cell) {
         // SAFETY: This is fine, since position represents only valid board coordinates
-        unsafe { self.0[y as usize].replace(x, cell) };
+        self[y].replace(x, cell)
     }
 
     pub fn remove(&mut self, Position { x, y }: Position) {
         // SAFETY: This is fine, since position represents only valid board coordinates
-        unsafe { self.0[y as usize].remove(x) };
+        self[y].remove(x)
     }
 
     pub fn move_cell(&mut self, from: Position, to: Position) {
@@ -28,6 +29,22 @@ impl Board {
 
     pub fn is_occupied(&self, pos: Position) -> bool {
         self.cell_at(pos).is_piece()
+    }
+}
+
+impl Index<Coord> for Board {
+    type Output = Row;
+
+    fn index(&self, idx: Coord) -> &Self::Output {
+        let idx: usize = idx.into();
+        &self.0[idx]
+    }
+}
+
+impl IndexMut<Coord> for Board {
+    fn index_mut(&mut self, idx: Coord) -> &mut Self::Output {
+        let idx: usize = idx.into();
+        &mut self.0[idx]
     }
 }
 
@@ -132,7 +149,7 @@ impl IntoIterator for Board {
     type Item = Row;
     type IntoIter = std::array::IntoIter<Row, 8>;
     fn into_iter(self) -> Self::IntoIter {
-        std::array::IntoIter::new(self.0)
+        self.0.into_iter()
     }
 }
 

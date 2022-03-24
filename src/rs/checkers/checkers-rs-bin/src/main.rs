@@ -1,9 +1,10 @@
 use std::time::Instant;
 
-use checkers_rs::{alphabeta, minimax, Board, Player, Position};
+use checkers_rs::{alphabeta, c, minimax, Board, Player, Position, Sizes};
 
 fn main() {
     let mut board = Board::default();
+    println!("Sizes: {:?}", Sizes::new());
     // let position = unsafe { Position::new_unchecked(2, 5) };
 
     // match checkers_rs::moves_for(&board, position) {
@@ -17,13 +18,11 @@ fn main() {
     // }
     println!("{}", board);
     // SAFETY: This is fine, since I'm not dumb to pass in wrong values for Position construction
-    unsafe {
-        println!("{:?}", board.cell_at(Position::new_unchecked(1, 0)));
-        println!("{:?}", board.cell_at(Position::new_unchecked(0, 5)));
-        println!("{:?}", board.cell_at(Position::new_unchecked(0, 0)));
-        println!("{:?}", board.cell_at(Position::new_unchecked(0, 3)));
-        board.move_cell(Position::new_unchecked(0, 5), Position::new_unchecked(1, 4));
-    }
+    println!("{:?}", board.cell_at(Position::new(c!(1), c!(0))));
+    println!("{:?}", board.cell_at(Position::new(c!(0), c!(5))));
+    println!("{:?}", board.cell_at(Position::new(c!(0), c!(0))));
+    println!("{:?}", board.cell_at(Position::new(c!(0), c!(3))));
+    board.move_cell(Position::new(c!(0), c!(5)), Position::new(c!(1), c!(4)));
     println!("{}", board);
 
     println!("{:?}", checkers_rs::alphabeta(&board, Player::White, 3));

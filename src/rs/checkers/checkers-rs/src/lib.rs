@@ -16,32 +16,21 @@ pub fn moves_for(board: &Board, position: Position) -> Option<Vec<Move>> {
 }
 
 fn player_can_make_eat_move(board: &Board, player: Player) -> bool {
-    for (position, piece) in player_positions(board, player) {
-        if exists_eat_move(board, position, piece) {
-            return true;
-        }
-    }
-    return false;
+    player_positions(board, player).any(|(position, piece)| exists_eat_move(board, position, piece))
 }
 
-fn player_positions(
-    board: &Board,
-    player: Player,
-) -> impl Iterator<Item = (Position, Piece)> + '_ {
-    board.into_iter().enumerate().flat_map(move |(y, row)| {
-        player_row_positions(row, player)
-            .map(move |(x, piece)| {
-                // SAFETY: This is fine since the only x and y indices are from 0 to 8 (excluding)
-                let position = unsafe { Position::new_unchecked(x as u8, y as u8) };
-                (position, piece)
-            })
+fn player_positions(board: &Board, player: Player) -> impl Iterator<Item = (Position, Piece)> + '_ {
+    Coord::in_order().zip(board).flat_map(move |(y, row)| {
+        player_row_positions(row, player).map(move |(x, piece)| {
+            let position = Position::new(x, y);
+            (position, piece)
+        })
     })
 }
 
-fn player_row_positions(row: &Row, player: Player) -> impl Iterator<Item = (usize, Piece)> + '_ {
-    row.into_iter()
-        .map(Cell::into_piece)
-        .enumerate()
+fn player_row_positions(row: &Row, player: Player) -> impl Iterator<Item = (Coord, Piece)> + '_ {
+    Coord::in_order()
+        .zip(row.into_iter().map(Cell::into_piece))
         .filter_map(|(x, piece)| piece.map(|piece| (x, piece)))
         .filter(move |(_, piece)| piece.player_affiliation() == player)
 }

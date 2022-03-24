@@ -1,6 +1,8 @@
 use std::fmt::{Display, Formatter, Write};
 use num_enum::UnsafeFromPrimitive;
 
+use crate::Coord;
+
 use super::{Piece, Player};
 use serde::{Deserialize, Serialize};
 
@@ -80,7 +82,8 @@ impl Cell {
     }
 }
 
-pub fn promote(y: u8, cell: Cell) -> Cell {
+pub fn promote(y: Coord, cell: Cell) -> Cell {
+    let y: u8 = y.into();
     match (y, cell) {
         (7, Cell::BlackPiece) => Cell::BlackQueen,
         (0, Cell::WhitePiece) => Cell::WhiteQueen,

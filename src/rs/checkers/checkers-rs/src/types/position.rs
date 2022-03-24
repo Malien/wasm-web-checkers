@@ -6,25 +6,31 @@ use serde::{
 };
 use std::fmt;
 
+use crate::Coord;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Position {
-    pub(crate) x: u8,
-    pub(crate) y: u8,
+    pub x: Coord,
+    pub y: Coord,
 }
 
 impl Position {
-    pub fn new(x: u8, y: u8) -> Option<Self> {
-        if x < 8 && y < 8 {
-            Some(Self { x, y })
-        } else {
-            None
-        }
-    }
+    // pub fn new(x: u8, y: u8) -> Option<Self> {
+    //     if x < 8 && y < 8 {
+    //         Some(Self { x, y })
+    //     } else {
+    //         None
+    //     }
+    // }
 
     // Safety: Position can only represent position on a 8 by 8 board
-    // so safe construction of position is only possible if both 
+    // so safe construction of position is only possible if both
     // coordinated are less than 8
-    pub unsafe fn new_unchecked(x: u8, y: u8) -> Self {
+    // pub unsafe fn new_unchecked(x: u8, y: u8) -> Self {
+    //     Self { x, y }
+    // }
+
+    pub fn new(x: Coord, y: Coord) -> Self {
         Self { x, y }
     }
 }

@@ -6,6 +6,7 @@ pub mod player;
 pub mod position;
 pub mod row;
 pub mod sizes;
+pub mod coord;
 
 pub use board::*;
 pub use cell::*;
@@ -15,3 +16,4 @@ pub use player::*;
 pub use position::*;
 pub use row::*;
 pub use sizes::*;
+pub use coord::*;
