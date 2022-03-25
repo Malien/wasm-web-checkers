@@ -15,7 +15,6 @@ where
     H: MoveRule,
 {
     fn compute_move(&self, board: &Board, from: Position, piece: Piece) -> Option<Move> {
-        // alert(format!("IfPlayer {{ {:?} }}.compute_move(board, {:?}, {:?})", self.player, from, piece).as_str());
         if board.cell_at(from).is_enemy_to(self.player) {
             None
         } else {
@@ -81,7 +80,6 @@ where
     T: Fn(Coord, Coord) -> bool,
 {
     fn compute_move(&self, board: &Board, from: Position, piece: Piece) -> Option<Move> {
-        // alert(format!("HandlerFilter.compute_move(board, {:?}, {:?})", from, piece).as_str());
         if (self.filter)(from.x, from.y) {
             self.over.compute_move(board, from, piece)
         } else {
@@ -96,7 +94,6 @@ where
     T: Fn(&Board, Position, Piece) -> bool,
 {
     fn next(&mut self, board: &Board, from: Position, piece: Piece) -> Option<Move> {
-        // alert(format!("HandlerFilter.compute_move(board, {:?}, {:?})", from, piece).as_str());
         if (self.filter)(board, from, piece) {
             self.over.next(board, from, piece)
         } else {

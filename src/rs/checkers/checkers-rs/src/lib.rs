@@ -15,8 +15,29 @@ pub fn moves_for(board: &Board, position: Position) -> Option<Vec<Move>> {
     }
 }
 
-fn player_can_make_eat_move(board: &Board, player: Player) -> bool {
-    player_positions(board, player).any(|(position, piece)| exists_eat_move(board, position, piece))
+pub fn has_moves(board: &Board, player: Player) -> bool {
+    player_positions(board, player).any(|(position, piece)| {
+        exists_move_from_position(board, position, piece)
+            || exists_eat_move_from_position(board, position, piece)
+    })
+}
+
+pub fn can_eat(board: &Board, player: Player) -> impl Iterator<Item = Position> + '_ {
+    player_positions(board, player)
+        .filter(move |(position, piece)| exists_eat_move_from_position(board, *position, *piece))
+        .map(|(position, _)| position)
+}
+
+pub fn available_moves(board: &Board, player: Player) -> impl Iterator<Item = Move> + '_ {
+    AvailableMovesIter {
+        had_eats: false,
+        eats: Some(
+            player_positions(board, player)
+                .flat_map(move |(position, piece)| chain_eat_moves(board, position, piece)),
+        ),
+        moves: player_positions(board, player)
+            .flat_map(move |(position, piece)| moves(board, position, piece)),
+    }
 }
 
 fn player_positions(board: &Board, player: Player) -> impl Iterator<Item = (Position, Piece)> + '_ {
@@ -35,14 +56,17 @@ fn player_row_positions(row: &Row, player: Player) -> impl Iterator<Item = (Coor
         .filter(move |(_, piece)| piece.player_affiliation() == player)
 }
 
-fn exists_eat_move(board: &Board, from: Position, piece: Piece) -> bool {
+fn player_can_make_eat_move(board: &Board, player: Player) -> bool {
+    player_positions(board, player)
+        .any(|(position, piece)| exists_eat_move_from_position(board, position, piece))
+}
+
+fn exists_eat_move_from_position(board: &Board, from: Position, piece: Piece) -> bool {
     eat_moves(board, from, piece).next().is_some()
 }
 
-pub fn can_eat(board: &Board, player: Player) -> impl Iterator<Item = Position> + '_ {
-    player_positions(board, player)
-        .filter(move |(position, piece)| exists_eat_move(board, *position, *piece))
-        .map(|(position, _)| position)
+fn exists_move_from_position(board: &Board, from: Position, piece: Piece) -> bool {
+    moves(board, from, piece).next().is_some()
 }
 
 struct AvailableMovesIter<E, M> {
@@ -73,28 +97,4 @@ where
             None => self.moves.next(),
         }
     }
-}
-
-pub fn available_moves(board: &Board, player: Player) -> impl Iterator<Item = Move> + '_ {
-    AvailableMovesIter {
-        had_eats: false,
-        eats: Some(
-            player_positions(board, player)
-                .flat_map(move |(position, piece)| chain_eat_moves(board, position, piece)),
-        ),
-        moves: player_positions(board, player)
-            .flat_map(move |(position, piece)| moves(board, position, piece)),
-    }
-}
-
-pub fn has_moves(board: &Board, player: Player) -> bool {
-    for (position, piece) in player_positions(board, player) {
-        if moves(board, position, piece).next().is_some() {
-            return true;
-        }
-        if eat_moves(board, position, piece).next().is_some() {
-            return true;
-        }
-    }
-    false
 }

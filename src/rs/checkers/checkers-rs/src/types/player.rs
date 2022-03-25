@@ -13,7 +13,7 @@ pub enum Player {
 }
 
 impl Player {
-    pub fn next(self) -> Self {
+    pub fn next_player(self) -> Self {
         match self {
             Player::White => Player::Black,
             Player::Black => Player::White,
